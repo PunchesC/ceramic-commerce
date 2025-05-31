@@ -53,7 +53,7 @@ const Gallery: React.FC = () => {
                   <button
                     onClick={e => {
                       e.stopPropagation();
-                      addToCart({ id: img.id, title: img.title });
+                      addToCart({ id: img.id, title: img.title, imageUrl: img.imageUrl });
                     }}
                     aria-label={`Add ${img.title} to cart`}
                     style={{ marginTop: '0.5rem' }}
@@ -77,7 +77,7 @@ const Gallery: React.FC = () => {
             </button>
             <button
               onClick={() => {
-                addToCart({ id: modalImage.id, title: modalImage.title });
+                addToCart({ id: modalImage.id, title: modalImage.title, imageUrl: modalImage.imageUrl }); // Pass imageUrl
                 setModalImage(null);
               }}
               style={{ marginTop: '1rem', marginLeft: '1rem' }}

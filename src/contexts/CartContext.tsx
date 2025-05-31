@@ -4,12 +4,14 @@ type CartItem = {
   id: number;
   title: string;
   quantity: number;
+  imageUrl?: string; // Add imageUrl
 };
 
 type CartContextType = {
   cart: CartItem[];
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
   removeFromCart: (id: number) => void;
+  clearCart: () => void; // Add clearCart
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -39,8 +41,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCart((prev) => prev.filter((i) => i.id !== id));
   };
 
+  const clearCart = () => setCart([]); // Implementation
+
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
       {children}
     </CartContext.Provider>
   );
