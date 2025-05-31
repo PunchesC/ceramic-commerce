@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PhotoCarousel from '../components/PhotoCarousel';
 import '../App.css';
 
 const Home: React.FC = () => {
@@ -35,6 +36,7 @@ const Home: React.FC = () => {
       <div ref={landingRef} className="section" style={{ background: '#f4f4f4' }}>
         <h1>Landing Section</h1>
         <p>Welcome to the artist's page!</p>
+        <PhotoCarousel />
       </div>
       <div ref={aboutRef} className="section" style={{ background: '#e9ecef' }}>
         <h1>About</h1>

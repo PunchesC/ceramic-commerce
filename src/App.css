@@ -72,3 +72,16 @@
   justify-content: center;
   scroll-snap-align: start;
 }
+
+.carousel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: center;
+}
+.carousel button {
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
