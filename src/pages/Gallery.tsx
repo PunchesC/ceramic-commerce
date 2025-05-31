@@ -40,7 +40,7 @@ const Gallery: React.FC = () => {
       <div ref={topRef} style={{ padding: '2rem', marginTop: '80px' }}>
         <h1>Gallery</h1>
         {/* --- Search and Sort Controls --- */}
-        <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="gallery-controls" style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <input
             type="text"
             placeholder="Search by name..."
