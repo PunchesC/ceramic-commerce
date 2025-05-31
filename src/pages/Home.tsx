@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
 
@@ -11,6 +11,18 @@ const Home: React.FC = () => {
   const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) => {
     ref.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Scroll to section if hash is present in URL
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#about' && aboutRef.current) {
+      aboutRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else if (hash === '#connections' && connectionsRef.current) {
+      connectionsRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else if (hash === '' && landingRef.current) {
+      landingRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
 
   return (
     <>
