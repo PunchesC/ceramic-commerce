@@ -1,6 +1,6 @@
-export type CartItem = {
-  id: number;
-  title: string;
+import { ArtistPiece } from "./ArtistPiece";
+
+export interface CartItem extends ArtistPiece {
   quantity: number;
   imageUrl?: string;
-};
+}

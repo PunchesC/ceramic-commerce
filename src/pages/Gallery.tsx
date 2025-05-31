@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGalleryImages } from '../hooks/UseGalleryImages';
-import { GalleryImage } from '../models/GalleryImage'; // or ../types/GalleryImage
+import { GalleryImage } from '../models/GalleryImage';
 import { useCart } from '../contexts/CartContext';
 import '../App.css';
 
@@ -13,30 +13,53 @@ const Gallery: React.FC = () => {
   const { images, loading } = useGalleryImages();
   const { addToCart, cart } = useCart();
 
-  const goToSection = (hash: string = '') => {
-    navigate(`/${hash}`);
-  };
-  const scrollToTop = () => {
-    topRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // --- Add these states for search and sort ---
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<'title-asc' | 'title-desc' | 'price-asc' | 'price-desc'>('title-asc');
+
+  const filteredImages = images
+    .filter(img => img.title.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (sort === 'title-asc') return a.title.localeCompare(b.title);
+      if (sort === 'title-desc') return b.title.localeCompare(a.title);
+      if (sort === 'price-asc') return a.price - b.price;
+      if (sort === 'price-desc') return b.price - a.price;
+      return 0;
+    });
+
+  // In the select:
+  <select value={sort} onChange={e => setSort(e.target.value as any)}>
+    <option value="title-asc">Sort by Title (A-Z)</option>
+    <option value="title-desc">Sort by Title (Z-A)</option>
+    <option value="price-asc">Sort by Price (Low to High)</option>
+    <option value="price-desc">Sort by Price (High to Low)</option>
+  </select>
 
   return (
     <>
-      {/* <nav className="App-nav">
-        <button onClick={() => goToSection()}>Home</button>
-        <button onClick={() => goToSection('#about')}>About</button>
-        <button onClick={() => goToSection('#connections')}>Connections</button>
-        <button onClick={() => navigate('/cart')}>
-          CART ({cart.reduce((sum, item) => sum + item.quantity, 0)})
-        </button>
-      </nav> */}
       <div ref={topRef} style={{ padding: '2rem', marginTop: '80px' }}>
         <h1>Gallery</h1>
+        {/* --- Search and Sort Controls --- */}
+        <div style={{ marginBottom: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ padding: '0.5rem', fontSize: '1rem' }}
+          />
+          <select value={sort} onChange={e => setSort(e.target.value as any)}>
+            <option value="title-asc">Sort by Title (A-Z)</option>
+            <option value="title-desc">Sort by Title (Z-A)</option>
+            <option value="price-asc">Sort by Price (Low to High)</option>
+            <option value="price-desc">Sort by Price (High to Low)</option>
+          </select>
+        </div>
         {loading ? (
           <div>Loading images...</div>
         ) : (
           <div className="gallery-grid">
-            {images.map((img) => (
+            {filteredImages.map((img) => (
               <div
                 key={img.id}
                 className="gallery-item"
@@ -50,6 +73,7 @@ const Gallery: React.FC = () => {
                 <div className="gallery-caption">
                   <strong>{img.title}</strong>
                   <div style={{ fontSize: '0.9em', color: '#666' }}>{img.description}</div>
+                  <div style={{ fontWeight: 'bold', margin: '0.5em 0' }}>${img.price.toFixed(2)}</div>
                   <button
                     onClick={e => {
                       e.stopPropagation();
@@ -72,12 +96,13 @@ const Gallery: React.FC = () => {
             <img src={modalImage.imageUrl} alt={modalImage.title} />
             <h2>{modalImage.title}</h2>
             <p>{modalImage.description}</p>
+            <div style={{ fontWeight: 'bold', margin: '0.5em 0' }}>${modalImage.price.toFixed(2)}</div>
             <button onClick={() => setModalImage(null)} style={{ marginTop: '1rem' }}>
               Close
             </button>
             <button
               onClick={() => {
-                addToCart({ id: modalImage.id, title: modalImage.title, imageUrl: modalImage.imageUrl }); // Pass imageUrl
+                addToCart({ id: modalImage.id, title: modalImage.title, imageUrl: modalImage.imageUrl });
                 setModalImage(null);
               }}
               style={{ marginTop: '1rem', marginLeft: '1rem' }}

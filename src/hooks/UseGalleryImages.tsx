@@ -4,33 +4,38 @@ import { GalleryImage } from '../models/GalleryImage';
 const mockImages: GalleryImage[] = [
   {
     id: 1,
-    title: 'Ceramic Piece A',
+    title: 'A',
     description: 'Description for piece A',
     imageUrl: require('../assets/a.jpg'),
+    price: 30, // Example price
   },
   {
     id: 2,
-    title: 'Ceramic Piece B',
+    title: 'B',
     description: 'Description for piece B',
     imageUrl: require('../assets/b.jpg'),
+    price: 20, // Example price
   },
   {
     id: 3,
-    title: 'Ceramic Piece C',
+    title: 'C',
     description: 'Description for piece C',
     imageUrl: require('../assets/c.jpg'),
+    price: 20
   },
   {
     id: 4,
-    title: 'Ceramic Piece D',
+    title: 'D',
     description: 'Description for piece D',
     imageUrl: require('../assets/d.jpg'),
+    price: 15,
   },
   {
     id: 5,
-    title: 'Ceramic Piece E',
+    title: 'E',
     description: 'Description for piece E',
     imageUrl: require('../assets/e.jpg'),
+    price: 50
   },
 ];
 
