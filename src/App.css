@@ -37,21 +37,31 @@
   }
 }
 
-.App-nav {
+/* In App.css or Header.css */
+.App-nav, .header {
   position: fixed;
   top: 0;
   width: 100%;
   height: 64px;
-  background: #222;
+  background: #fff;
   display: flex;
   gap: 1rem;
-  padding: 1rem 0;
+  padding: 0 1rem;
   z-index: 100;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+@media (max-width: 600px) {
+  .App-nav, .header {
+    flex-direction: column;
+    height: auto;
+    padding: 0.5rem 0;
+  }
 }
 .App-nav button {
-  color: #fff;
+  color: black;
   background: none;
   border: none;
   cursor: pointer;
@@ -159,4 +169,21 @@
   max-height: 60vh;
   border-radius: 8px;
   margin-bottom: 1rem;
+}
+
+@media (max-width: 600px) {
+  .carousel img {
+    max-width: 95vw;
+    max-height: 40vh;
+  }
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .App-nav {
+    flex-direction: column;
+    gap: 0.5rem;
+    height: auto;
+    padding: 0.5rem 0;
+  }
 }

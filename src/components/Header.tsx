@@ -1,15 +1,39 @@
-import { Link as ScrollLink } from 'react-scroll';
-import { Link } from 'react-router-dom';
-import './Header.css';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useCart } from '../contexts/CartContext';
+import '../App.css';
 
 function Header() {
+  const { cart } = useCart();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Helper to handle section navigation
+  const goToSection = (hash: string) => {
+    if (location.pathname === '/') {
+      if (window.location.hash === hash) {
+        // Always clear and reset the hash to force hashchange
+        window.location.hash = '#force-refresh'; // set to a dummy hash
+        setTimeout(() => {
+          window.location.hash = hash;
+        }, 0);
+      } else {
+        window.location.hash = hash;
+      }
+    } else {
+      navigate('/' + hash);
+    }
+  };
+
   return (
     <header className="header">
-      <nav>
-        <ScrollLink to="landing" smooth={true} duration={500}>Landing</ScrollLink>
-        <ScrollLink to="about" smooth={true} duration={500}>About</ScrollLink>
-        <ScrollLink to="connections" smooth={true} duration={500}>Connections</ScrollLink>
-        <Link to="/gallery">Gallery</Link>
+      <nav className="App-nav">
+        <button onClick={() => goToSection('#home')}>Home</button>
+        <button onClick={() => goToSection('#about')}>About</button>
+        <button onClick={() => goToSection('#connections')}>Connections</button>
+        <button onClick={() => navigate('/gallery')}>Gallery</button>
+        <button onClick={() => navigate('/cart')}>
+          CART ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+        </button>
       </nav>
     </header>
   );

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import PhotoCarousel from '../components/PhotoCarousel';
+import { useCart } from '../contexts/CartContext';
 import '../App.css';
 
 const Home: React.FC = () => {
@@ -8,34 +9,37 @@ const Home: React.FC = () => {
   const aboutRef = useRef<HTMLDivElement>(null);
   const connectionsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const location = useLocation();
-
+  const { cart } = useCart();
 
   const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) => {
     ref.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Scroll to section if hash is present in URL
+  // Listen for hash changes and scroll to the correct section
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash === '#about' && aboutRef.current) {
-      aboutRef.current.scrollIntoView({ behavior: 'smooth' });
-    } else if (hash === '#connections' && connectionsRef.current) {
-      connectionsRef.current.scrollIntoView({ behavior: 'smooth' });
-    } else if (hash === '' && homeRef.current) {
-      homeRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#about' && aboutRef.current) {
+        aboutRef.current.scrollIntoView({ behavior: 'smooth' });
+      } else if (hash === '#connections' && connectionsRef.current) {
+        connectionsRef.current.scrollIntoView({ behavior: 'smooth' });
+      } else if (
+        hash === '#home' || hash === '' || hash === '#' || hash === '#force-refresh'
+      ) {
+        homeRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   return (
     <>
-      <nav className="App-nav">
-        <button onClick={() => scrollTo(homeRef)}>Home</button>
-        <button onClick={() => scrollTo(aboutRef)}>About</button>
-        <button onClick={() => scrollTo(connectionsRef)}>Connections</button>
-        <button onClick={() => navigate('/gallery')}>Gallery</button>
-        <p>CART ICON</p>
-      </nav>
       <div ref={homeRef} className="section" style={{ background: '#f4f4f4' }}>
         <h1>Landing Section</h1>
         <p>Welcome to the artist's page!</p>

@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGalleryImages } from '../hooks/UseGalleryImages';
-import { GalleryImage } from '../models/GalleryImage';
+import { GalleryImage } from '../models/GalleryImage'; // or ../types/GalleryImage
+import { useCart } from '../contexts/CartContext';
 import '../App.css';
 
 const Gallery: React.FC = () => {
@@ -10,6 +11,7 @@ const Gallery: React.FC = () => {
   const topRef = useRef<HTMLDivElement>(null);
 
   const { images, loading } = useGalleryImages();
+  const { addToCart, cart } = useCart();
 
   const goToSection = (hash: string = '') => {
     navigate(`/${hash}`);
@@ -20,13 +22,14 @@ const Gallery: React.FC = () => {
 
   return (
     <>
-      <nav className="App-nav">
+      {/* <nav className="App-nav">
         <button onClick={() => goToSection()}>Home</button>
         <button onClick={() => goToSection('#about')}>About</button>
         <button onClick={() => goToSection('#connections')}>Connections</button>
-        <button onClick={scrollToTop}>Gallery</button>
-        <p>CART ICON</p>
-      </nav>
+        <button onClick={() => navigate('/cart')}>
+          CART ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+        </button>
+      </nav> */}
       <div ref={topRef} style={{ padding: '2rem', marginTop: '80px' }}>
         <h1>Gallery</h1>
         {loading ? (
@@ -47,6 +50,16 @@ const Gallery: React.FC = () => {
                 <div className="gallery-caption">
                   <strong>{img.title}</strong>
                   <div style={{ fontSize: '0.9em', color: '#666' }}>{img.description}</div>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      addToCart({ id: img.id, title: img.title });
+                    }}
+                    aria-label={`Add ${img.title} to cart`}
+                    style={{ marginTop: '0.5rem' }}
+                  >
+                    Add to Cart
+                  </button>
                 </div>
               </div>
             ))}
@@ -59,7 +72,19 @@ const Gallery: React.FC = () => {
             <img src={modalImage.imageUrl} alt={modalImage.title} />
             <h2>{modalImage.title}</h2>
             <p>{modalImage.description}</p>
-            <button onClick={() => setModalImage(null)} style={{ marginTop: '1rem' }}>Close</button>
+            <button onClick={() => setModalImage(null)} style={{ marginTop: '1rem' }}>
+              Close
+            </button>
+            <button
+              onClick={() => {
+                addToCart({ id: modalImage.id, title: modalImage.title });
+                setModalImage(null);
+              }}
+              style={{ marginTop: '1rem', marginLeft: '1rem' }}
+              aria-label={`Add ${modalImage.title} to cart from modal`}
+            >
+              Add to Cart
+            </button>
           </div>
         </div>
       )}
