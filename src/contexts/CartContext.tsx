@@ -1,18 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-type CartItem = {
-  id: number;
-  title: string;
-  quantity: number;
-  imageUrl?: string; // Add imageUrl
-};
-
-type CartContextType = {
-  cart: CartItem[];
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (id: number) => void;
-  clearCart: () => void; // Add clearCart
-};
+import { CartItem } from '../models/CartItems';
+import { CartContextType } from '../models/CartContextType';
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
