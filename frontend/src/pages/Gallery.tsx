@@ -10,15 +10,14 @@ const Gallery: React.FC = () => {
   const [modalImage, setModalImage] = useState<GalleryImage | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
-  const { images, loading } = useGalleryImages();
-  const { addToCart, cart } = useCart();
+  const { images, loading, error } = useGalleryImages();
+  const { addToCart } = useCart();
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<'title-asc' | 'title-desc' | 'price-asc' | 'price-desc'>('title-asc');
 
   // Get unique types from images
   const types = Array.from(new Set(images.map(img => img.type).filter(Boolean)));
-  // --- Add these states for search and sort ---
-  const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<'title-asc' | 'title-desc' | 'price-asc' | 'price-desc'>('title-asc');
 
   const filteredImages = images
     .filter(img => img.title.toLowerCase().includes(search.toLowerCase()))
@@ -30,14 +29,6 @@ const Gallery: React.FC = () => {
       if (sort === 'price-desc') return b.price - a.price;
       return 0;
     });
-
-  // In the select:
-  <select value={sort} onChange={e => setSort(e.target.value as any)}>
-    <option value="title-asc">Sort by Title (A-Z)</option>
-    <option value="title-desc">Sort by Title (Z-A)</option>
-    <option value="price-asc">Sort by Price (Low to High)</option>
-    <option value="price-desc">Sort by Price (High to Low)</option>
-  </select>
 
   return (
     <>
@@ -65,8 +56,13 @@ const Gallery: React.FC = () => {
             <option value="price-desc">Sort by Price (High to Low)</option>
           </select>
         </div>
+        {/* --- Loading, Error, and Empty States --- */}
         {loading ? (
           <div>Loading images...</div>
+        ) : error ? (
+          <div style={{ color: 'red' }}>Error: {error}</div>
+        ) : images.length === 0 ? (
+          <div style={{ color: 'orange' }}>No products found.</div>
         ) : (
           <div className="gallery-grid">
             {filteredImages.map((img) => (
@@ -91,7 +87,7 @@ const Gallery: React.FC = () => {
                         id: img.id,
                         title: img.title,
                         imageUrl: img.imageUrl,
-                        price: img.price, // <-- add this
+                        price: img.price,
                       });
                     }}
                     aria-label={`Add ${img.title} to cart`}
@@ -105,6 +101,7 @@ const Gallery: React.FC = () => {
           </div>
         )}
       </div>
+      {/* --- Modal for Image Details --- */}
       {modalImage && (
         <div className="modal-overlay" onClick={() => setModalImage(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>

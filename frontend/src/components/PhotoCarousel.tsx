@@ -1,25 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-const images = [
-    require('../assets/a.jpg'),
-    require('../assets/b.jpg'),
-    require('../assets/c.jpg'),
-    require('../assets/d.jpg'),
-    require('../assets/e.jpg'),
-];
+import { useGalleryImages } from '../hooks/UseGalleryImages';
 
 const PhotoCarousel: React.FC = () => {
+    const { images, loading } = useGalleryImages();
     const [index, setIndex] = useState(0);
     const [playing, setPlaying] = useState(true);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const prev = () => setIndex((i) => (i === 0 ? images.length - 1 : i - 1));
-    const next = () => setIndex((i) => (i === images.length - 1 ? 0 : i + 1));
-
     useEffect(() => {
-        if (playing) {
+        if (playing && images.length > 0) {
             intervalRef.current = setInterval(() => {
-                setIndex((i) => (i === images.length - 1 ? 0 : i + 1));
+                setIndex(i => (i === images.length - 1 ? 0 : i + 1));
             }, 2500);
         } else if (intervalRef.current) {
             clearInterval(intervalRef.current);
@@ -27,11 +18,16 @@ const PhotoCarousel: React.FC = () => {
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
-    }, [playing]);
+    }, [playing, images.length]);
 
+    if (loading) return <div>Loading carousel...</div>;
+    if (images.length === 0) return <div>No images available for carousel.</div>;
+
+    const prev = () => setIndex(i => (i === 0 ? images.length - 1 : i - 1));
+    const next = () => setIndex(i => (i === images.length - 1 ? 0 : i + 1));
     const togglePlaying = () => {
         if (!playing) setIndex(0);
-        setPlaying((p) => !p);
+        setPlaying(p => !p);
     };
 
     return (
@@ -39,8 +35,8 @@ const PhotoCarousel: React.FC = () => {
             <div>
                 <button onClick={prev}>&lt;</button>
                 <img
-                    src={images[index]}
-                    alt={`Ceramic piece ${index + 1}`}
+                    src={images[index].imageUrl}
+                    alt={images[index].title}
                     className="carousel-image"
                 />
                 <button onClick={next}>&gt;</button>

@@ -42,15 +42,23 @@ const mockImages: GalleryImage[] = [
 export function useGalleryImages() {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate async fetch
-    const timer = setTimeout(() => {
-      setImages(mockImages);
-      setLoading(false);
-    }, 1200);
-    return () => clearTimeout(timer);
+    fetch("http://localhost:5000/api/products")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch products");
+        return res.json();
+      })
+      .then(data => {
+        setImages(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
   }, []);
 
-  return { images, loading };
+  return { images, loading, error };
 }
