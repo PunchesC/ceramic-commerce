@@ -6,4 +6,6 @@ export interface GalleryImage extends ArtistPiece {
   imageUrl: string;
   price: number;
   type?: string;
+  stock?: number;
+  isActive?: boolean;
 }
