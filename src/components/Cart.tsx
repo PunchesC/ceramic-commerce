@@ -5,6 +5,7 @@ const Cart: React.FC = () => {
     const { cart, removeFromCart, clearCart } = useCart();
     const [showCheckout, setShowCheckout] = useState(false);
     const [purchased, setPurchased] = useState(false);
+    const total = cart.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
 
     const handleCheckout = () => {
         setShowCheckout(true);
@@ -34,6 +35,7 @@ const Cart: React.FC = () => {
                             />
                         )}
                         <strong>{item.title}</strong> (x{item.quantity})
+                        <span style={{ marginLeft: '1rem' }}>${(item.price ?? 0).toFixed(2)}</span>
                         <button
                             onClick={() => removeFromCart(item.id)}
                             style={{ marginLeft: '1rem' }}
@@ -44,18 +46,10 @@ const Cart: React.FC = () => {
                     </li>
                 ))}
             </ul>
-            <button
-                onClick={clearCart}
-                style={{ marginTop: '0.5rem', marginRight: '1rem', background: '#eee', color: '#333' }}
-            >
-                Clear Cart
-            </button>
-            <button
-                onClick={handleCheckout}
-                style={{ marginTop: '0.5rem' }}
-            >
-                Proceed to Checkout
-            </button>
+            <div style={{ fontWeight: 'bold', marginBottom: '1rem' }}>
+                Total: ${total.toFixed(2)}
+            </div>
+            {/* ...rest of your code... */}
             {showCheckout && (
                 <div className="modal-overlay" onClick={() => setShowCheckout(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -70,10 +64,13 @@ const Cart: React.FC = () => {
                                             style={{ width: 40, height: 40, objectFit: 'cover', marginRight: 8, borderRadius: 4 }}
                                         />
                                     )}
-                                    {item.title} (x{item.quantity})
+                                    {item.title} (x{item.quantity}) - ${(item.price ?? 0).toFixed(2)}
                                 </li>
                             ))}
                         </ul>
+                        <div style={{ fontWeight: 'bold', margin: '1rem 0' }}>
+                            Total: ${total.toFixed(2)}
+                        </div>
                         <button onClick={handlePurchase} style={{ marginTop: '1rem' }}>
                             Complete Purchase
                         </button>
@@ -83,11 +80,25 @@ const Cart: React.FC = () => {
                     </div>
                 </div>
             )}
-            {purchased && (
-                <div style={{ marginTop: '1rem', color: 'green' }}>
-                    Thank you for your purchase!
-                </div>
-            )}
+{purchased && (
+    <div className="modal-overlay">
+        <div className="modal-content">
+            <h3>Order Confirmation</h3>
+            <p>Thank you for your purchase!</p>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+                {cart.map(item => (
+                    <li key={item.id}>
+                        {item.title} (x{item.quantity})
+                    </li>
+                ))}
+            </ul>
+            <div style={{ fontWeight: 'bold', margin: '1rem 0' }}>
+                Total: ${total.toFixed(2)}
+            </div>
+            <button onClick={() => setPurchased(false)}>Close</button>
+        </div>
+    </div>
+)}
         </div>
     );
 };

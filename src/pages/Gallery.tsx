@@ -12,13 +12,17 @@ const Gallery: React.FC = () => {
 
   const { images, loading } = useGalleryImages();
   const { addToCart, cart } = useCart();
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
+  // Get unique types from images
+  const types = Array.from(new Set(images.map(img => img.type).filter(Boolean)));
   // --- Add these states for search and sort ---
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'title-asc' | 'title-desc' | 'price-asc' | 'price-desc'>('title-asc');
 
   const filteredImages = images
     .filter(img => img.title.toLowerCase().includes(search.toLowerCase()))
+    .filter(img => typeFilter === 'all' || img.type === typeFilter)
     .sort((a, b) => {
       if (sort === 'title-asc') return a.title.localeCompare(b.title);
       if (sort === 'title-desc') return b.title.localeCompare(a.title);
@@ -48,6 +52,12 @@ const Gallery: React.FC = () => {
             onChange={e => setSearch(e.target.value)}
             style={{ padding: '0.5rem', fontSize: '1rem' }}
           />
+          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+            <option value="all">All Types</option>
+            {types.map(type => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
           <select value={sort} onChange={e => setSort(e.target.value as any)}>
             <option value="title-asc">Sort by Title (A-Z)</option>
             <option value="title-desc">Sort by Title (Z-A)</option>
@@ -77,7 +87,12 @@ const Gallery: React.FC = () => {
                   <button
                     onClick={e => {
                       e.stopPropagation();
-                      addToCart({ id: img.id, title: img.title, imageUrl: img.imageUrl });
+                      addToCart({
+                        id: img.id,
+                        title: img.title,
+                        imageUrl: img.imageUrl,
+                        price: img.price, // <-- add this
+                      });
                     }}
                     aria-label={`Add ${img.title} to cart`}
                     style={{ marginTop: '0.5rem' }}
@@ -102,7 +117,12 @@ const Gallery: React.FC = () => {
             </button>
             <button
               onClick={() => {
-                addToCart({ id: modalImage.id, title: modalImage.title, imageUrl: modalImage.imageUrl });
+                addToCart({
+                  id: modalImage.id,
+                  title: modalImage.title,
+                  imageUrl: modalImage.imageUrl,
+                  price: modalImage.price,
+                });
                 setModalImage(null);
               }}
               style={{ marginTop: '1rem', marginLeft: '1rem' }}
