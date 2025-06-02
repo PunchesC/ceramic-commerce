@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+
 import { useGalleryImages } from '../hooks/UseGalleryImages';
 
 const PhotoCarousel: React.FC = () => {
