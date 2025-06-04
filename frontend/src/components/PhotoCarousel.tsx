@@ -36,7 +36,7 @@ const PhotoCarousel: React.FC = () => {
             <div>
                 <button onClick={prev}>&lt;</button>
                 <img
-                    src={images[index].imageUrl}
+                    src={images[index].images[0]?.url ?? ""}
                     alt={images[index].title}
                     className="carousel-image"
                 />
