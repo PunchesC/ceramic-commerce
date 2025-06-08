@@ -5,6 +5,7 @@ import CartPage from './pages/CartPage';
 import Header from './components/Header';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import OrderConfirmation from './pages/OrderConfirmation';
 
 import './App.css';
 
@@ -20,6 +21,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
         </Routes>
       </Router>
     </Elements>
