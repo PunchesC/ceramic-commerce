@@ -9,25 +9,39 @@ const OrderHistory: React.FC = () => {
   const { user, token } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!user || !token) {
-      navigate('/login');
-    }
-      if (!token) return;
-      //testing purpose
-      // fetch('/api/orders/user/me', 
-      fetch('https://localhost:7034/api/Orders/user/me', 
-        {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-        .then(res => res.json())
-        .then(data => {
-          setOrders(data);
-          setLoading(false);
-        });
-    }, [user, token, navigate]);
+useEffect(() => {
+  if (!user || !token) {
+    navigate('/login');
+    return;
+  }
+  if (!token) return;
+
+  fetch('https://localhost:7034/api/Orders/user/me', {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  })
+    .then(res => {
+      if (!res.ok) {
+        // Optionally handle specific status codes
+        if (res.status === 401) {
+          navigate('/login');
+        }
+        throw new Error('Failed to fetch orders');
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log(data)
+      setOrders(data);
+      setLoading(false);
+    })
+    .catch(err => {
+      setLoading(false);
+      // Optionally set an error state and display a message
+      console.error(err);
+    });
+}, [user, token, navigate]);
 
   if (loading) return <div>Loading...</div>;
 

@@ -15,7 +15,8 @@ const Login: React.FC = () => {
     try {
       await login(email, password);
        setSuccess(true);
-      navigate('/orders');
+       //need to work on redirecting to orders page after login
+      // navigate('/orders');
     } catch (err: any) {
       setError(err.message);
     }
