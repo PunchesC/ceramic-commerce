@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContex';
 import '../App.css';
 
 function Header() {
   const { cart } = useCart();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -13,8 +15,7 @@ function Header() {
   const goToSection = (hash: string) => {
     if (location.pathname === '/') {
       if (window.location.hash === hash) {
-        // Always clear and reset the hash to force hashchange
-        window.location.hash = '#force-refresh'; // set to a dummy hash
+        window.location.hash = '#force-refresh';
         setTimeout(() => {
           window.location.hash = hash;
         }, 0);
@@ -43,6 +44,14 @@ function Header() {
         <button onClick={() => { navigate('/cart'); setMenuOpen(false); }}>
           CART ({cart.reduce((sum, item) => sum + item.quantity, 0)})
         </button>
+        {user ? (
+          <>
+            <button onClick={() => { navigate('/orders'); setMenuOpen(false); }}>Orders</button>
+            <button onClick={() => { logout(); setMenuOpen(false); }}>Logout</button>
+          </>
+        ) : (
+          <button onClick={() => { navigate('/login'); setMenuOpen(false); }}>Login</button>
+        )}
       </nav>
     </header>
   );

@@ -6,6 +6,9 @@ import Header from './components/Header';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import OrderConfirmation from './pages/OrderConfirmation';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import OrderHistory from './pages/OrderHistory';
 
 import './App.css';
 
@@ -22,6 +25,9 @@ function App() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/orders" element={<OrderHistory />} />
         </Routes>
       </Router>
     </Elements>

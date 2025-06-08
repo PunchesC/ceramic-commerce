@@ -33,7 +33,9 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
     setError(null);
 
     // 1. Call your backend to create a PaymentIntent
-    const res = await fetch('/api/payments/create-intent', {
+    //Testing purpose, change the URL to your API endpoint
+    // const res = await fetch('https://localhost:7034/api/payments/create-intent', {
+    const res = await fetch('https://localhost:7034/api/payments/create-intent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount: Math.round(total * 100) }), // amount in cents

@@ -8,6 +8,7 @@ export function useGalleryImages() {
   const [error, setError] = useState<string | null>(null);
 
 useEffect(() => {
+  //localhost for development, change to your API URL in production
   fetch("https://localhost:7034/api/products")
     .then(res => {
       console.log("Raw response:", res);

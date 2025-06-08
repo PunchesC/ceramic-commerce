@@ -8,7 +8,9 @@ const OrderConfirmation: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/orders/${orderId}`)
+    //For testing purpose, change the URL to your API endpoint
+    // fetch(`/api/orders/${orderId}`)
+    fetch(`'https://localhost:7034/api/orders/${orderId}`)
       .then(res => res.json())
       .then(data => {
         setOrder(data);
