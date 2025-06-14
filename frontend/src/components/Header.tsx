@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContex';
+import { useAuth } from '../contexts/AuthContext';
 import '../App.css';
 
 function Header() {
@@ -47,6 +47,7 @@ function Header() {
         {user ? (
           <>
             <button onClick={() => { navigate('/orders'); setMenuOpen(false); }}>Orders</button>
+            <button onClick={() => { navigate('/profile'); setMenuOpen(false); }}>Profile</button>
             <button onClick={() => { logout(); setMenuOpen(false); }}>Logout</button>
           </>
         ) : (

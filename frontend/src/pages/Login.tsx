@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContex';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
@@ -10,17 +10,15 @@ const Login: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await login(email, password);
-       setSuccess(true);
-       //need to work on redirecting to orders page after login
-      // navigate('/orders');
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  try {
+    await login(email, password);
+    navigate('/'); // or navigate('/orders');
+  } catch (err: any) {
+    setError(err.message);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit}>

@@ -13,14 +13,14 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const stored = localStorage.getItem('user');
+    return stored ? JSON.parse(stored) : null;
+  });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
 
   const login = async (email: string, password: string) => {
-    //for testing purposes, you can use the following line to simulate a login request
-    // const res = await fetch('/api/auth/login', 
-    const res = await fetch('https://localhost:7034/api/Auth/login', 
-        {
+    const res = await fetch('https://localhost:7034/api/Auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -30,13 +30,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(data.user);
     setToken(data.token);
     localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user)); // persist user
   };
 
   const register = async (email: string, password: string, name?: string) => {
-    //for testing purposes, you can use the following line to simulate a registration request
-    // const res = await fetch('/api/auth/register', 
-    const res = await fetch('https://localhost:7034/api/Auth/register', 
-        {
+    const res = await fetch('https://localhost:7034/api/Auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name }),
@@ -46,12 +44,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(data.user);
     setToken(data.token);
     localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user)); // persist user
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('user'); // clear user
   };
 
   return (

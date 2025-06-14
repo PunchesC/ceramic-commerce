@@ -9,6 +9,7 @@ import OrderConfirmation from './pages/OrderConfirmation';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import OrderHistory from './pages/OrderHistory';
+import Profile from './pages/Profile';
 
 import './App.css';
 
@@ -28,6 +29,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/orders" element={<OrderHistory />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </Router>
     </Elements>

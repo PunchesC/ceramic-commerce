@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Order } from '../models/Order';
-import { useAuth } from '../contexts/AuthContex';
+import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const OrderHistory: React.FC = () => {
