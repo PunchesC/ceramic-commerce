@@ -15,10 +15,13 @@ useEffect(() => {
     return;
   }
   if (!token) return;
-
-  fetch('https://localhost:7034/api/Orders/user/me', {
+console.log('Fetching orders for user:', user.email);
+console.log('Using token:', token);
+console.log(localStorage.getItem('token'))
+  fetch('https://localhost:7034/api/orders/user/me', {
     headers: {
       'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json"
     },
   })
     .then(res => {

@@ -24,22 +24,22 @@ const [user, setUser] = useState<User | null>(() => {
 });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
 
-  const login = async (email: string, password: string) => {
-    const res = await fetch('https://localhost:7034/api/Auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!res.ok) throw new Error('Login failed');
-    const data = await res.json();
-    setUser(data.user);
-    setToken(data.token);
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user)); // persist user
-  };
-
+const login = async (email: string, password: string) => {
+  const res = await fetch('https://localhost:7034/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) throw new Error('Login failed');
+  const data = await res.json();
+  console.log("LOGIN RESPONSE:", data); // <-- Add this line
+  setUser(data.user);
+  setToken(data.token);
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('user', JSON.stringify(data.user));
+};
   const register = async (email: string, password: string, name?: string) => {
-    const res = await fetch('https://localhost:7034/api/Auth/register', {
+    const res = await fetch('https://localhost:7034/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, name }),
