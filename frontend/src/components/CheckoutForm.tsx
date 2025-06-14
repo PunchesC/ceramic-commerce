@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 
 // Custom styles for the CardElement
 const CARD_ELEMENT_OPTIONS = {
@@ -24,6 +25,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
   const stripe = useStripe();
   const elements = useElements();
   const { clearCart } = useCart();
+  const { token } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
 
@@ -35,27 +37,49 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
     // 1. Call your backend to create a PaymentIntent
     //Testing purpose, change the URL to your API endpoint
     // const res = await fetch('https://localhost:7034/api/payments/create-intent', {
-    const res = await fetch('https://localhost:7034/api/payments/create-intent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: Math.round(total * 100) }), // amount in cents
-    });
-    const { clientSecret } = await res.json();
 
-    // 2. Confirm the card payment
-    const result = await stripe?.confirmCardPayment(clientSecret, {
-      payment_method: {
-        card: elements?.getElement(CardElement)!,
-      },
-    });
+    try {
+      const res = await fetch('https://localhost:7034/api/payments/create-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ amount: Math.round(total * 100) }),
+      });
 
-    if (result?.error) {
-      setError(result.error.message || 'Payment failed');
+      if (!res.ok) {
+        // Try to get error message from backend, else use status text
+        let message = 'Failed to create payment intent';
+        try {
+          const data = await res.json();
+          message = data.error || message;
+        } catch {
+          message = res.statusText || message;
+        }
+        throw new Error(message);
+      }
+
+      const { clientSecret } = await res.json();
+
+      // 2. Confirm the card payment
+      const result = await stripe?.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements?.getElement(CardElement)!,
+        },
+      });
+
+      if (result?.error) {
+        setError(result.error.message || 'Payment failed');
+        setProcessing(false);
+      } else if (result?.paymentIntent?.status === 'succeeded') {
+        clearCart();
+        setProcessing(false);
+        onSuccess();
+      }
+    } catch (err: any) {
+      setError(err.message || 'Payment failed');
       setProcessing(false);
-    } else if (result?.paymentIntent?.status === 'succeeded') {
-      clearCart();
-      setProcessing(false);
-      onSuccess();
     }
   };
 
