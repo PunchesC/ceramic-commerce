@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import CheckoutForm from './CheckoutForm';
+import { useAuth } from '../contexts/AuthContext';
 
 const Cart: React.FC = () => {
     const { cart, removeFromCart, clearCart } = useCart();
     const [showCheckout, setShowCheckout] = useState(false);
     const [purchased, setPurchased] = useState(false);
     const total = cart.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
+     const { user } = useAuth();
 
     if (cart.length === 0) {
         return <div>Your cart is empty.</div>;
@@ -105,6 +107,15 @@ const Cart: React.FC = () => {
                     <div className="modal-content">
                         <h3>Order Confirmation</h3>
                         <p>Thank you for your purchase!</p>
+                        {!user && (
+                            <div>
+                                <p>
+                                    Want to track your order and save your info for next time?
+                                    <br />
+                                    <a href="/register">Create an account</a>
+                                </p>
+                            </div>
+                        )}
                         <button onClick={() => setPurchased(false)}>Close</button>
                     </div>
                 </div>

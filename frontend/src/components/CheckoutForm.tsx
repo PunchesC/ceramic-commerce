@@ -20,7 +20,9 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
   const stripe = useStripe();
   const elements = useElements();
   const { cart, clearCart } = useCart();
-  const { token } = useAuth();
+  const { user, token } = useAuth();
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
 
@@ -80,6 +82,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
             total,
             stripePaymentIntentId: result.paymentIntent.id,
             status: 'Paid',
+            ...(user ? {} : { guestName, guestEmail }), // Send guest info if not logged in
           }),
         });
 
@@ -111,6 +114,25 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
         margin: '0 auto',
       }}
     >
+      {/* Show guest fields if not logged in */}
+      {!user && (
+        <>
+          <input
+            type="text"
+            placeholder="Your Name"
+            value={guestName}
+            onChange={e => setGuestName(e.target.value)}
+            required
+          />
+          <input
+            type="email"
+            placeholder="Your Email"
+            value={guestEmail}
+            onChange={e => setGuestEmail(e.target.value)}
+            required
+          />
+        </>
+      )}
       <div style={{ width: '100%', marginBottom: '1rem' }}>
         <CardElement options={CARD_ELEMENT_OPTIONS} />
       </div>
