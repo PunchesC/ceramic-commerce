@@ -3,28 +3,23 @@ import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 
-// Custom styles for the CardElement
 const CARD_ELEMENT_OPTIONS = {
   style: {
     base: {
       fontSize: '18px',
       color: '#32325d',
       fontFamily: 'Roboto, Open Sans, Segoe UI, sans-serif',
-      '::placeholder': {
-        color: '#a0aec0',
-      },
+      '::placeholder': { color: '#a0aec0' },
       padding: '12px 16px',
     },
-    invalid: {
-      color: '#fa755a',
-    },
+    invalid: { color: '#fa755a' },
   },
 };
 
 const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ total, onSuccess }) => {
   const stripe = useStripe();
   const elements = useElements();
-  const { clearCart } = useCart();
+  const { cart, clearCart } = useCart();
   const { token } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -34,11 +29,8 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
     setProcessing(true);
     setError(null);
 
-    // 1. Call your backend to create a PaymentIntent
-    //Testing purpose, change the URL to your API endpoint
-    // const res = await fetch('https://localhost:7034/api/payments/create-intent', {
-
     try {
+      // 1. Create PaymentIntent
       const res = await fetch('https://localhost:7034/api/payments/create-intent', {
         method: 'POST',
         headers: {
@@ -49,7 +41,6 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
       });
 
       if (!res.ok) {
-        // Try to get error message from backend, else use status text
         let message = 'Failed to create payment intent';
         try {
           const data = await res.json();
@@ -62,7 +53,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
 
       const { clientSecret } = await res.json();
 
-      // 2. Confirm the card payment
+      // 2. Confirm card payment
       const result = await stripe?.confirmCardPayment(clientSecret, {
         payment_method: {
           card: elements?.getElement(CardElement)!,
@@ -73,6 +64,31 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
         setError(result.error.message || 'Payment failed');
         setProcessing(false);
       } else if (result?.paymentIntent?.status === 'succeeded') {
+        // 3. Create the order in your backend
+        const orderRes = await fetch('https://localhost:7034/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            items: cart.map(item => ({
+              productId: item.id,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            total,
+            stripePaymentIntentId: result.paymentIntent.id,
+            status: 'Paid',
+          }),
+        });
+
+        if (!orderRes.ok) {
+          setError('Payment succeeded but failed to create order.');
+          setProcessing(false);
+          return;
+        }
+
         clearCart();
         setProcessing(false);
         onSuccess();
