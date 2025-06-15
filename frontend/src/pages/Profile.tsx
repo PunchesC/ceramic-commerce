@@ -3,17 +3,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { UserProfile } from '../models/UserProfile';
 import { useNavigate } from 'react-router-dom';
 
-// const API_BASE_URL =  "https://localhost:7034";
-
 const Profile: React.FC = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Fetching profile with token:", token); // Debugging line
     if (!token) {
       navigate('/login');
       return;
@@ -25,12 +22,10 @@ const Profile: React.FC = () => {
       }
     })
       .then(res => {
-        console.log(res)
         if (!res.ok) throw new Error('Failed to fetch profile');
         return res.json();
       })
       .then(data => {
-        console.log("PROFILE DATA:", data); // Debugging line
         setProfile(data);
         setLoading(false);
       })
@@ -40,16 +35,21 @@ const Profile: React.FC = () => {
       });
   }, [token, navigate]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div style={{ color: 'red' }}>{error}</div>;
-  if (!profile) return <div>No profile found.</div>;
+  if (loading) return <div className="profile-card">Loading...</div>;
+  if (error) return <div className="profile-card" style={{ color: 'red' }}>{error}</div>;
+  if (!profile) return <div className="profile-card">No profile found.</div>;
 
   return (
-    <div>
-      <h2>Your Profile</h2>
-      <p><strong>Name:</strong> {profile.name}</p>
-      <p><strong>Email:</strong> {profile.email}</p>
-      <p><strong>Admin:</strong> {profile.isAdmin ? 'Yes' : 'No'}</p>
+    <div className="profile-card">
+      <div className="profile-avatar">
+        <span role="img" aria-label="avatar" style={{ fontSize: 48 }}>👤</span>
+      </div>
+      <h2>{profile.name}</h2>
+      <div className="profile-info">
+        <div><strong>Email:</strong> {profile.email}</div>
+        {/* <div><strong>Admin:</strong> {profile.isAdmin ? 'Yes' : 'No'}</div> */}
+      </div>
+      <button className="profile-edit-btn" disabled>Edit Profile</button>
     </div>
   );
 };
