@@ -239,3 +239,84 @@
     gap: 0.5rem;
   }
 }
+
+.formContainer {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+.cardLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.cardBox {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  padding: 8px;
+}
+.submitButton {
+  width: 100%;
+  padding: 12px 0;
+  background: #3182ce;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.auth-form-container {
+  max-width: 350px;
+  margin: 80px auto;
+  padding: 2rem 2.5rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.auth-form-container h2 {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+.auth-form-container label {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+.auth-form-container input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+.auth-form-container button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #3182ce;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+.auth-form-container .auth-switch {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+.auth-form-container .auth-error {
+  color: #e53e3e;
+  text-align: center;
+}
+.auth-form-container .auth-success {
+  color: #38a169;
+  text-align: center;
+}

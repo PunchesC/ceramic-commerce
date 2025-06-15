@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -10,24 +10,45 @@ const Login: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-    await login(email, password);
-    navigate('/'); // or navigate('/orders');
-  } catch (err: any) {
-    setError(err.message);
-  }
-};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    try {
+      await login(email, password);
+      setSuccess(true);
+      setTimeout(() => navigate('/'), 1000);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="auth-form-container" onSubmit={handleSubmit}>
       <h2>Login</h2>
-      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
-      <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password" />
+      <label htmlFor="login-email">Email</label>
+      <input
+        id="login-email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="Email"
+        type="email"
+        required
+      />
+      <label htmlFor="login-password">Password</label>
+      <input
+        id="login-password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        type="password"
+        placeholder="Password"
+        required
+      />
       <button type="submit">Login</button>
-      {error && <div style={{color:'red'}}>{error}</div>}
-      {success && <div style={{color:'green'}}>Login successful!</div>}
+      {error && <div className="auth-error">{error}</div>}
+      {success && <div className="auth-success">Login successful!</div>}
+      <div className="auth-switch">
+        Don't have an account? <Link to="/register">Register</Link>
+      </div>
     </form>
   );
 };

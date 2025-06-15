@@ -16,19 +16,31 @@ const Gallery: React.FC = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'title-asc' | 'title-desc' | 'price-asc' | 'price-desc'>('title-asc');
 
-  // Get unique types from images
-  const types = Array.from(new Set(images.map(img => img.type).filter(Boolean)));
+// Multiply products for testing (e.g., repeat 5 times)
+const multipliedImages = Array(5)
+  .fill(null)
+  .flatMap((_, i) =>
+    images.map(img => ({
+      ...img,
+      id: Number(`${img.id}${i}`), // Ensure unique id for each duplicate
+      title: `${img.title} (${i + 1})`, // Optional: show which copy
+    }))
+  );
 
-  const filteredImages = images
-    .filter(img => img.title.toLowerCase().includes(search.toLowerCase()))
-    .filter(img => typeFilter === 'all' || img.type === typeFilter)
-    .sort((a, b) => {
-      if (sort === 'title-asc') return a.title.localeCompare(b.title);
-      if (sort === 'title-desc') return b.title.localeCompare(a.title);
-      if (sort === 'price-asc') return a.price - b.price;
-      if (sort === 'price-desc') return b.price - a.price;
-      return 0;
-    });
+// Use multipliedImages instead of images below:
+const types = Array.from(new Set(multipliedImages.map(img => img.type).filter(Boolean)));
+
+const filteredImages = multipliedImages
+  .filter(img => img.title.toLowerCase().includes(search.toLowerCase()))
+  .filter(img => typeFilter === 'all' || img.type === typeFilter)
+  .sort((a, b) => {
+    if (sort === 'title-asc') return a.title.localeCompare(b.title);
+    if (sort === 'title-desc') return b.title.localeCompare(a.title);
+    if (sort === 'price-asc') return a.price - b.price;
+    if (sort === 'price-desc') return b.price - a.price;
+    return 0;
+  });
+
 
 return (
   <>
