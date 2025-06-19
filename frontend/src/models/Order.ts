@@ -5,7 +5,7 @@ export interface Order {
   userId?: number;
   items: OrderItem[];
   total: number;
-  stripePaymentIntentId: string;
+  stripePaymentIntentId?: string;
   status: string;
   createdAt: string;
 }
