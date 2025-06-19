@@ -31,18 +31,24 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
   // Polling function to check order/payment status
   const checkOrderStatus = async (intentId: string) => {
     try {
-      const response = await fetch(`/api/orders/status?paymentIntentId=${intentId}`);
+      console.log(`Checking status for PaymentIntent ID: ${intentId}`);
+      const response = await fetch(`https://localhost:7034/api/orders/status?paymentIntentId=${intentId}`);
       const data = await response.json();
       if (data.status === 'confirmed') {
         setOrderStatus('confirmed');
+        clearCart();
+        setProcessing(false);
+        onSuccess();
       } else if (data.status === 'failed') {
         setOrderStatus('failed');
+        setProcessing(false);
       } else {
         // Still pending, poll again after a delay
         setTimeout(() => checkOrderStatus(intentId), 2000);
       }
     } catch (error) {
       setOrderStatus('failed');
+      setProcessing(false);
     }
   };
 
@@ -89,7 +95,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
         },
         body: JSON.stringify({
           amount: Math.round(total * 100),
-          orderId: order.id, // pass orderId as metadata if your backend supports it
+          orderId: order.id,
         }),
       });
 
@@ -99,7 +105,25 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
         return;
       }
 
-      const { clientSecret } = await paymentRes.json();
+      const { clientSecret, paymentIntentId } = await paymentRes.json();
+      console.log('PaymentIntent created:', paymentIntentId);
+      // PATCH the order with the PaymentIntentId BEFORE confirming payment
+      const patchRes = await fetch(`https://localhost:7034/api/orders/${order.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ StripePaymentIntentId: paymentIntentId }),
+      });
+      console.log('PATCH response:', patchRes.status);
+      if (!patchRes.ok) {
+        const errorData = await patchRes.json();
+        console.error('PATCH error:', errorData);
+        setError('Failed to update order with PaymentIntentId');
+        setProcessing(false);
+        return;
+      }
 
       // 3. Confirm card payment
       const result = await stripe?.confirmCardPayment(clientSecret, {
@@ -112,23 +136,9 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
         setError(result.error.message || 'Payment failed');
         setProcessing(false);
       } else if (result?.paymentIntent?.status === 'succeeded') {
-        // 4. (Optional) PATCH order with paymentIntentId if needed
-        await fetch(`https://localhost:7034/api/orders/${order.id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ stripePaymentIntentId: result.paymentIntent.id }),
-        });
-
         setPaymentIntentId(result.paymentIntent.id);
         setOrderStatus('pending');
-        checkOrderStatus(result.paymentIntent.id);
-
-        // clearCart();
-        // setProcessing(false);
-        // onSuccess();
+        checkOrderStatus(result.paymentIntent.id); // <-- Start polling here
       }
     } catch (err: any) {
       setError(err.message || 'Payment failed');
