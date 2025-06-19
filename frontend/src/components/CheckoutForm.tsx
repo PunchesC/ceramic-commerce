@@ -29,29 +29,30 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
 
   // Polling function to check order/payment status
-  const checkOrderStatus = async (intentId: string) => {
-    try {
-      console.log(`Checking status for PaymentIntent ID: ${intentId}`);
-      const response = await fetch(`https://localhost:7034/api/orders/status?paymentIntentId=${intentId}`);
-      const data = await response.json();
-      if (data.status === 'confirmed') {
-        setOrderStatus('confirmed');
-        clearCart();
-        setProcessing(false);
-        onSuccess();
-      } else if (data.status === 'failed') {
-        setOrderStatus('failed');
-        setProcessing(false);
-      } else {
-        // Still pending, poll again after a delay
-        setTimeout(() => checkOrderStatus(intentId), 2000);
-      }
-    } catch (error) {
-      setOrderStatus('failed');
-      setProcessing(false);
+const checkOrderStatus = async (intentId: string, attempt = 0) => {
+  if (attempt > 15) { // stop after 15 tries (~30 seconds)
+    setOrderStatus('failed');
+    setError('Order confirmation timed out.');
+    return;
+  }
+  try {
+    const response = await fetch(`https://localhost:7034/api/orders/status?paymentIntentId=${intentId}`);
+    if (response.status === 404) {
+      setTimeout(() => checkOrderStatus(intentId, attempt + 1), 2000);
+      return;
     }
-  };
-
+    const data = await response.json();
+    if (data.status === 'confirmed') {
+      setOrderStatus('confirmed');
+    } else if (data.status === 'failed') {
+      setOrderStatus('failed');
+    } else {
+      setTimeout(() => checkOrderStatus(intentId, attempt + 1), 2000);
+    }
+  } catch (error) {
+    setOrderStatus('failed');
+  }
+};
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProcessing(true);
@@ -114,7 +115,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ StripePaymentIntentId: paymentIntentId }),
+        body: JSON.stringify({stripePaymentIntentId: paymentIntentId }),
       });
       console.log('PATCH response:', patchRes.status);
       if (!patchRes.ok) {
