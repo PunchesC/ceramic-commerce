@@ -100,7 +100,16 @@ return (
               onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setModalImage(img); }}
             >
               {img.images && img.images.length > 0 ? (
-                <img src={img.images[0].url} alt={img.title} />
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {img.images.map((image, idx) => (
+                    <img
+                      key={idx}
+                      src={image.url}
+                      alt={`${img.title} image ${idx + 1}`}
+                      style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                    />
+                  ))}
+                </div>
               ) : (
                 <div style={{ width: 200, height: 200, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   No Image
@@ -109,14 +118,16 @@ return (
               <div className="gallery-caption">
                 <strong>{img.title}</strong>
                 <div style={{ fontSize: '0.9em', color: '#666' }}>{img.description}</div>
-                <div style={{ fontWeight: 'bold', margin: '0.5em 0' }}>${img.price.toFixed(2)}</div>
+                <div style={{ fontWeight: 'bold', margin: '0.5em 0' }}>
+                  ${typeof img.price === "number" ? img.price.toFixed(2) : "0.00"}
+                </div>
                 <button
                   onClick={e => {
                     e.stopPropagation();
                     addToCart({
                       id: img.id,
                       title: img.title,
-                      imageUrl: img.images[0]?.url ?? "",
+                      imageUrls: img.images ? img.images.map((i: any) => i.url) : [],
                       price: img.price,
                     });
                   }}
@@ -136,7 +147,16 @@ return (
       <div className="modal-overlay" onClick={() => setModalImage(null)}>
         <div className="modal-content" onClick={e => e.stopPropagation()}>
           {modalImage.images && modalImage.images.length > 0 ? (
-            <img src={modalImage.images[0].url} alt={modalImage.title} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              {modalImage.images.map((image, idx) => (
+                <img
+                  key={idx}
+                  src={image.url}
+                  alt={`${modalImage.title} image ${idx + 1}`}
+                  style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                />
+              ))}
+            </div>
           ) : (
             <div style={{ width: 300, height: 300, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               No Image
@@ -144,7 +164,9 @@ return (
           )}
           <h2>{modalImage.title}</h2>
           <p>{modalImage.description}</p>
-          <div style={{ fontWeight: 'bold', margin: '0.5em 0' }}>${modalImage.price.toFixed(2)}</div>
+          <div style={{ fontWeight: 'bold', margin: '0.5em 0' }}>
+            ${typeof modalImage.price === "number" ? modalImage.price.toFixed(2) : "0.00"}
+          </div>
           <button onClick={() => setModalImage(null)} style={{ marginTop: '1rem' }}>
             Close
           </button>
@@ -153,7 +175,7 @@ return (
               addToCart({
                 id: modalImage.id,
                 title: modalImage.title,
-                imageUrl: modalImage.images[0]?.url ?? "",
+                imageUrls: modalImage.images ? modalImage.images.map((i: any) => i.url) : [],
                 price: modalImage.price,
               });
               setModalImage(null);

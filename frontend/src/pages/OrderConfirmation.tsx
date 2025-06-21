@@ -33,11 +33,24 @@ const OrderConfirmation: React.FC = () => {
       <ul>
         {order.items.map(item => (
           <li key={item.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-            <img
-              src={item.product?.imageUrls?.[0] || '/placeholder.jpg'}
-              alt={item.product?.title || 'Product'}
-              style={{ width: 60, height: 60, objectFit: 'cover', marginRight: 16, borderRadius: 8, border: '1px solid #eee' }}
-            />
+            <div style={{ display: 'flex', gap: 8, marginRight: 16 }}>
+              {item.product?.imageUrls && item.product.imageUrls.length > 0 ? (
+                item.product.imageUrls.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`${item.product?.title || 'Product'} image ${idx + 1}`}
+                    style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                  />
+                ))
+              ) : (
+                <img
+                  src="/placeholder.jpg"
+                  alt="No product"
+                  style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                />
+              )}
+            </div>
             <div>
               <div style={{ fontWeight: 600 }}>{item.product?.title || 'Unknown Product'}</div>
               <div>
