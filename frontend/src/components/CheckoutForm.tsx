@@ -27,39 +27,78 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
   const [processing, setProcessing] = useState(false);
   const [orderStatus, setOrderStatus] = useState<'pending' | 'confirmed' | 'failed' | 'idle'>('idle');
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  const [shippingAddress, setShippingAddress] = useState({
+    line1: '',
+    line2: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    country: '',
+  });
 
   // Polling function to check order/payment status
-const checkOrderStatus = async (intentId: string, attempt = 0) => {
-  if (attempt > 15) { // stop after 15 tries (~30 seconds)
-    setOrderStatus('failed');
-    setError('Order confirmation timed out.');
-    return;
-  }
-  try {
-    const response = await fetch(`https://localhost:7034/api/orders/status?paymentIntentId=${intentId}`);
-    if (response.status === 404) {
-      setTimeout(() => checkOrderStatus(intentId, attempt + 1), 2000);
+  const checkOrderStatus = async (intentId: string, attempt = 0) => {
+    if (attempt > 15) { // stop after 15 tries (~30 seconds)
+      setOrderStatus('failed');
+      setError('Order confirmation timed out.');
       return;
     }
-    const data = await response.json();
-    if (data.status === 'confirmed') {
-      setOrderStatus('confirmed');
-    } else if (data.status === 'failed') {
+    try {
+      const response = await fetch(`https://localhost:7034/api/orders/status?paymentIntentId=${intentId}`);
+      if (response.status === 404) {
+        setTimeout(() => checkOrderStatus(intentId, attempt + 1), 2000);
+        return;
+      }
+      const data = await response.json();
+      if (data.status === 'confirmed') {
+        setOrderStatus('confirmed');
+      } else if (data.status === 'failed') {
+        setOrderStatus('failed');
+      } else {
+        setTimeout(() => checkOrderStatus(intentId, attempt + 1), 2000);
+      }
+    } catch (error) {
       setOrderStatus('failed');
-    } else {
-      setTimeout(() => checkOrderStatus(intentId, attempt + 1), 2000);
     }
-  } catch (error) {
-    setOrderStatus('failed');
-  }
-};
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProcessing(true);
     setError(null);
+    // Prevent duplicate submission
+    if (processing || orderStatus === 'pending' || orderStatus === 'confirmed') {
+      setError('Order is already being processed or completed.');
+      return;
+    }
+    // Validate shipping address
+    const { line1, city, state, postalCode, country } = shippingAddress;
+    if (!line1 || !city || !state || !postalCode || !country) {
+      setError('Please fill out all required shipping address fields.');
+      return;
+    }
 
+    setProcessing(true);
     try {
-      // 1. Create the order first (inventory check happens here)
+      // 1. Create PaymentIntent first
+      const paymentRes = await fetch('https://localhost:7034/api/payments/create-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          amount: Math.round(total * 100),
+        }),
+      });
+
+      if (!paymentRes.ok) {
+        setError('Failed to create payment intent');
+        setProcessing(false);
+        return;
+      }
+
+      const { clientSecret, paymentIntentId } = await paymentRes.json();
+
+      // 2. Create the order, passing paymentIntentId
       const orderRes = await fetch('https://localhost:7034/api/orders', {
         method: 'POST',
         headers: {
@@ -72,9 +111,11 @@ const checkOrderStatus = async (intentId: string, attempt = 0) => {
             quantity: item.quantity,
             price: item.price,
           })),
+          stripePaymentIntentId: paymentIntentId,
           total,
           status: 'Pending',
           ...(user ? {} : { guestName, guestEmail }),
+          shippingAddress: { ...shippingAddress },
         }),
       });
 
@@ -86,45 +127,6 @@ const checkOrderStatus = async (intentId: string, attempt = 0) => {
       }
 
       const order = await orderRes.json();
-
-      // 2. Create PaymentIntent, pass orderId as metadata
-      const paymentRes = await fetch('https://localhost:7034/api/payments/create-intent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          amount: Math.round(total * 100),
-          orderId: order.id,
-        }),
-      });
-
-      if (!paymentRes.ok) {
-        setError('Failed to create payment intent');
-        setProcessing(false);
-        return;
-      }
-
-      const { clientSecret, paymentIntentId } = await paymentRes.json();
-      console.log('PaymentIntent created:', paymentIntentId);
-      // PATCH the order with the PaymentIntentId BEFORE confirming payment
-      const patchRes = await fetch(`https://localhost:7034/api/orders/${order.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({stripePaymentIntentId: paymentIntentId }),
-      });
-      console.log('PATCH response:', patchRes.status);
-      if (!patchRes.ok) {
-        const errorData = await patchRes.json();
-        console.error('PATCH error:', errorData);
-        setError('Failed to update order with PaymentIntentId');
-        setProcessing(false);
-        return;
-      }
 
       // 3. Confirm card payment
       const result = await stripe?.confirmCardPayment(clientSecret, {
@@ -139,7 +141,7 @@ const checkOrderStatus = async (intentId: string, attempt = 0) => {
       } else if (result?.paymentIntent?.status === 'succeeded') {
         setPaymentIntentId(result.paymentIntent.id);
         setOrderStatus('pending');
-        checkOrderStatus(result.paymentIntent.id); // <-- Start polling here
+        checkOrderStatus(result.paymentIntent.id);
       }
     } catch (err: any) {
       setError(err.message || 'Payment failed');
@@ -171,6 +173,54 @@ const checkOrderStatus = async (intentId: string, attempt = 0) => {
             />
           </>
         )}
+        <label>Shipping Address</label>
+        <input
+          type="text"
+          placeholder="Address Line 1"
+          value={shippingAddress.line1}
+          onChange={e => setShippingAddress({ ...shippingAddress, line1: e.target.value })}
+          required
+          className="checkout-input"
+        />
+        <input
+          type="text"
+          placeholder="Address Line 2"
+          value={shippingAddress.line2}
+          onChange={e => setShippingAddress({ ...shippingAddress, line2: e.target.value })}
+          className="checkout-input"
+        />
+        <input
+          type="text"
+          placeholder="City"
+          value={shippingAddress.city}
+          onChange={e => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+          required
+          className="checkout-input"
+        />
+        <input
+          type="text"
+          placeholder="State"
+          value={shippingAddress.state}
+          onChange={e => setShippingAddress({ ...shippingAddress, state: e.target.value })}
+          required
+          className="checkout-input"
+        />
+        <input
+          type="text"
+          placeholder="Postal Code"
+          value={shippingAddress.postalCode}
+          onChange={e => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
+          required
+          className="checkout-input"
+        />
+        <input
+          type="text"
+          placeholder="Country"
+          value={shippingAddress.country}
+          onChange={e => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+          required
+          className="checkout-input"
+        />
         <label className="cardLabel">Card Details</label>
         <div className="cardBox">
           <div className="cardElementWrapper">
