@@ -10,12 +10,14 @@ const OrderConfirmation: React.FC = () => {
   useEffect(() => {
     //For testing purpose, change the URL to your API endpoint
     // fetch(`/api/orders/${orderId}`)
-    fetch(`'https://localhost:7034/api/orders/${orderId}`)
+    fetch(`https://localhost:7034/api/orders/${orderId}`)
       .then(res => res.json())
       .then(data => {
         setOrder(data);
         setLoading(false);
+        console.log(data)
       });
+      
   }, [orderId]);
 
   if (loading) return <div>Loading...</div>;
@@ -30,13 +32,18 @@ const OrderConfirmation: React.FC = () => {
       <h3>Items:</h3>
       <ul>
         {order.items.map(item => (
-          <li key={item.id}>
+          <li key={item.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
             <img
-              src={item.product.imageUrl || '/placeholder.jpg'}
-              alt={item.product.title}
-              style={{ width: 50, height: 50, objectFit: 'cover', marginRight: 8 }}
+              src={item.product?.imageUrls?.[0] || '/placeholder.jpg'}
+              alt={item.product?.title || 'Product'}
+              style={{ width: 60, height: 60, objectFit: 'cover', marginRight: 16, borderRadius: 8, border: '1px solid #eee' }}
             />
-            {item.product.title} x {item.quantity} — ${item.price.toFixed(2)}
+            <div>
+              <div style={{ fontWeight: 600 }}>{item.product?.title || 'Unknown Product'}</div>
+              <div>
+                Quantity: {item.quantity} &nbsp;|&nbsp; Price: ${item.price.toFixed(2)}
+              </div>
+            </div>
           </li>
         ))}
       </ul>

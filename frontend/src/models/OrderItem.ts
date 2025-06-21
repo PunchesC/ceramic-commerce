@@ -6,6 +6,6 @@ export interface OrderItem  {
   product: {
     id: number;
     title: string;
-    imageUrl?: string;
+    imageUrls?: string[];
   };
 };

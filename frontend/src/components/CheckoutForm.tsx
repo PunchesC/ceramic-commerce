@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -19,6 +20,7 @@ const CARD_ELEMENT_OPTIONS = {
 const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ total, onSuccess }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const navigate = useNavigate();
   const { cart, clearCart } = useCart();
   const { user, token } = useAuth();
   const [guestName, setGuestName] = useState('');
@@ -138,10 +140,13 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
       if (result?.error) {
         setError(result.error.message || 'Payment failed');
         setProcessing(false);
-      } else if (result?.paymentIntent?.status === 'succeeded') {
+      } else if 
+      (result?.paymentIntent?.status === 'succeeded') {
         setPaymentIntentId(result.paymentIntent.id);
         setOrderStatus('pending');
         checkOrderStatus(result.paymentIntent.id);
+        clearCart();
+        navigate(`/order-confirmation/${order.id}`);
       }
     } catch (err: any) {
       setError(err.message || 'Payment failed');
