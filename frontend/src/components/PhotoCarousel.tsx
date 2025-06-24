@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-
 import { useGalleryImages } from '../hooks/UseGalleryImages';
 
 const PhotoCarousel: React.FC = () => {
@@ -23,7 +22,7 @@ const PhotoCarousel: React.FC = () => {
 
     if (loading) return <div>Loading carousel...</div>;
     if (images.length === 0) return <div>No images available for carousel.</div>;
-    console.log(JSON.stringify(images, null, 2));
+
     const prev = () => setIndex(i => (i === 0 ? images.length - 1 : i - 1));
     const next = () => setIndex(i => (i === images.length - 1 ? 0 : i + 1));
     const togglePlaying = () => {
@@ -31,16 +30,17 @@ const PhotoCarousel: React.FC = () => {
         setPlaying(p => !p);
     };
 
+    const currentImageUrl =
+        images[index].imageUrls && images[index].imageUrls.length > 0
+            ? images[index].imageUrls[0]
+            : "/placeholder.jpg";
+
     return (
         <div className="carousel">
             <div>
                 <button onClick={prev}>&lt;</button>
                 <img
-                    src={
-                        images[index].images && images[index].images.length > 0
-                            ? images[index].images[0].url
-                            : "/placeholder.jpg"
-                    }
+                    src={currentImageUrl}
                     alt={images[index].title}
                     className="carousel-image"
                 />
