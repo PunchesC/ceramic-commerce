@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGalleryImages } from '../hooks/UseGalleryImages';
+import { useCloudinaryImages } from '../hooks/UseCloudinaryImages';
 import { GalleryImage } from '../models/GalleryImage';
 import { useCart } from '../contexts/CartContext';
 import '../App.css';
@@ -8,6 +9,7 @@ import '../App.css';
 const Gallery: React.FC = () => {
   const navigate = useNavigate();
   const [modalImage, setModalImage] = useState<GalleryImage | null>(null);
+  const [modalImageIndex, setModalImageIndex] = useState(0); // for swiping in modal
   const topRef = useRef<HTMLDivElement>(null);
 
   const { images, loading, error } = useGalleryImages();
@@ -28,6 +30,28 @@ const Gallery: React.FC = () => {
       if (sort === 'price-desc') return b.price - a.price;
       return 0;
     });
+
+  // Helper to get first Cloudinary image for a product
+  const CloudinaryThumb: React.FC<{ productId: number; title: string }> = ({ productId, title }) => {
+    const { imageUrls, loading } = useCloudinaryImages(productId);
+    if (loading) return <div style={{ width: 60, height: 60, background: '#eee' }} />;
+    if (imageUrls.length > 0) {
+      return <img src={imageUrls[0]} alt={title} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }} />;
+    }
+    return <div style={{ width: 60, height: 60, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>No Image</div>;
+  };
+
+  // Modal Cloudinary images
+  const { imageUrls: modalCloudinaryImages, loading: modalCloudinaryLoading } = useCloudinaryImages(modalImage ? modalImage.id : null);
+
+  // Modal navigation
+  const modalPrev = () => setModalImageIndex(idx => (modalCloudinaryImages.length > 0 ? (idx === 0 ? modalCloudinaryImages.length - 1 : idx - 1) : 0));
+  const modalNext = () => setModalImageIndex(idx => (modalCloudinaryImages.length > 0 ? (idx === modalCloudinaryImages.length - 1 ? 0 : idx + 1) : 0));
+
+  // Reset modal image index when modalImage or images change
+  React.useEffect(() => {
+    setModalImageIndex(0);
+  }, [modalImage, modalCloudinaryImages.length]);
 
   return (
     <>
@@ -74,22 +98,7 @@ const Gallery: React.FC = () => {
                 aria-label={`View ${img.title}`}
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setModalImage(img); }}
               >
-                {img.imageUrls && img.imageUrls.length > 0 ? (
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {img.imageUrls.map((url, idx) => (
-                      <img
-                        key={idx}
-                        src={url}
-                        alt={`${img.title} image ${idx + 1}`}
-                        style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ width: 200, height: 200, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    No Image
-                  </div>
-                )}
+                <CloudinaryThumb productId={img.id} title={img.title} />
                 <div className="gallery-caption">
                   <strong>{img.title}</strong>
                   <div style={{ fontSize: '0.9em', color: '#666' }}>{img.description}</div>
@@ -102,7 +111,7 @@ const Gallery: React.FC = () => {
                       addToCart({
                         id: img.id,
                         title: img.title,
-                        imageUrls: img.imageUrls,
+                        imageUrls: [], // You can fetch Cloudinary images here if needed
                         price: img.price,
                       });
                     }}
@@ -121,16 +130,22 @@ const Gallery: React.FC = () => {
       {modalImage && (
         <div className="modal-overlay" onClick={() => setModalImage(null)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            {modalImage.imageUrls && modalImage.imageUrls.length > 0 ? (
-              <div style={{ display: 'flex', gap: 8 }}>
-                {modalImage.imageUrls.map((url, idx) => (
+            {modalCloudinaryLoading ? (
+              <div style={{ width: 300, height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>
+            ) : modalCloudinaryImages.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button onClick={modalPrev}>&lt;</button>
                   <img
-                    key={idx}
-                    src={url}
-                    alt={`${modalImage.title} image ${idx + 1}`}
-                    style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
+                    src={modalCloudinaryImages[modalImageIndex]}
+                    alt={`${modalImage.title} image ${modalImageIndex + 1}`}
+                    style={{ width: 300, height: 300, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
                   />
-                ))}
+                  <button onClick={modalNext}>&gt;</button>
+                </div>
+                <div style={{ marginTop: 8, fontSize: '0.9em', color: '#666' }}>
+                  Image {modalImageIndex + 1} of {modalCloudinaryImages.length}
+                </div>
               </div>
             ) : (
               <div style={{ width: 300, height: 300, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -150,7 +165,7 @@ const Gallery: React.FC = () => {
                 addToCart({
                   id: modalImage.id,
                   title: modalImage.title,
-                  imageUrls: modalImage.imageUrls,
+                  imageUrls: modalCloudinaryImages,
                   price: modalImage.price,
                 });
                 setModalImage(null);

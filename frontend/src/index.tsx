@@ -3,8 +3,9 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { CartProvider } from './contexts/CartContext'; 
+import { CartProvider } from './contexts/CartContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CloudinaryImageCacheProvider } from './contexts/CloudinaryImageCacheContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,9 +13,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <AuthProvider>
-    <CartProvider>
-      <App />
-    </CartProvider>
+      <CartProvider>
+        <CloudinaryImageCacheProvider>
+          <App />
+        </CloudinaryImageCacheProvider>
+      </CartProvider>
     </AuthProvider>
   </React.StrictMode>
 );
