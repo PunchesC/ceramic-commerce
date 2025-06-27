@@ -115,7 +115,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
           })),
           stripePaymentIntentId: paymentIntentId,
           total,
-          status: 'Pending',
+          status: 'pending', // use lowercase
           ...(user ? {} : { guestName, guestEmail }),
           shippingAddress: { ...shippingAddress },
         }),
