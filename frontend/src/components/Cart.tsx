@@ -4,7 +4,7 @@ import CheckoutForm from './CheckoutForm';
 import { useAuth } from '../contexts/AuthContext';
 
 const Cart: React.FC = () => {
-    const { cart, removeFromCart, clearCart } = useCart();
+    const { cart, removeFromCart} = useCart();
     const [showCheckout, setShowCheckout] = useState(false);
     const [purchased, setPurchased] = useState(false);
     const total = cart.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);

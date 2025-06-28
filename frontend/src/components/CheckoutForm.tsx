@@ -28,7 +28,6 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
   const [orderStatus, setOrderStatus] = useState<'pending' | 'confirmed' | 'failed' | 'idle'>('idle');
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [shippingAddress, setShippingAddress] = useState({
     line1: '',
     line2: '',
@@ -142,7 +141,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
         setProcessing(false);
       } else if 
       (result?.paymentIntent?.status === 'succeeded') {
-        setPaymentIntentId(result.paymentIntent.id);
+        // Removed setPaymentIntentId to fix unused variable lint error
         setOrderStatus('pending');
         checkOrderStatus(result.paymentIntent.id);
         clearCart();

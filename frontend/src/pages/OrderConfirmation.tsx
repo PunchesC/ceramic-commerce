@@ -40,14 +40,14 @@ const OrderConfirmation: React.FC = () => {
                   <img
                     key={idx}
                     src={url}
-                    alt={`${item.product?.title || 'Product'} image ${idx + 1}`}
+                    alt={item.product?.title || 'Product photo'}
                     style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
                   />
                 ))
               ) : (
                 <img
                   src="/placeholder.jpg"
-                  alt="No product"
+                  alt="Placeholder"
                   style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
                 />
               )}

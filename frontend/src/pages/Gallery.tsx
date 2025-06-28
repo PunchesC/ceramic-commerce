@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useGalleryImages } from '../hooks/UseGalleryImages';
 import { useCloudinaryImages } from '../hooks/UseCloudinaryImages';
 import { GalleryImage } from '../models/GalleryImage';
@@ -7,7 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import '../App.css';
 
 const Gallery: React.FC = () => {
-  const navigate = useNavigate();
+  // Removed unused navigate variable
   const [modalImage, setModalImage] = useState<GalleryImage | null>(null);
   const [modalImageIndex, setModalImageIndex] = useState(0); // for swiping in modal
   const topRef = useRef<HTMLDivElement>(null);
@@ -36,7 +35,7 @@ const Gallery: React.FC = () => {
     const { imageUrls, loading } = useCloudinaryImages(productId);
     if (loading) return <div style={{ width: 60, height: 60, background: '#eee' }} />;
     if (imageUrls.length > 0) {
-      return <img src={imageUrls[0]} alt={title} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }} />;
+      return <img src={imageUrls[0]} alt={title || 'Product photo'} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }} />;
     }
     return <div style={{ width: 60, height: 60, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>No Image</div>;
   };
@@ -138,7 +137,7 @@ const Gallery: React.FC = () => {
                   <button onClick={modalPrev}>&lt;</button>
                   <img
                     src={modalCloudinaryImages[modalImageIndex]}
-                    alt={`${modalImage.title} image ${modalImageIndex + 1}`}
+                    alt={modalImage.title || 'Product photo'}
                     style={{ width: 300, height: 300, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee' }}
                   />
                   <button onClick={modalNext}>&gt;</button>

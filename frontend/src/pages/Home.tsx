@@ -1,19 +1,11 @@
 import React, { useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import PhotoCarousel from '../components/PhotoCarousel';
-import { useCart } from '../contexts/CartContext';
 import '../App.css';
 
 const Home: React.FC = () => {
   const homeRef = useRef<HTMLDivElement>(null);
   const aboutRef = useRef<HTMLDivElement>(null);
   const connectionsRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const { cart } = useCart();
-
-  const scrollTo = (ref: React.RefObject<HTMLDivElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   // Listen for hash changes and scroll to the correct section
   useEffect(() => {

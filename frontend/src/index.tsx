@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { CartProvider } from './contexts/CartContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { CloudinaryImageCacheProvider } from './contexts/CloudinaryImageCacheContext';
 
 const root = ReactDOM.createRoot(

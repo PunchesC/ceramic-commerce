@@ -92,13 +92,13 @@ const PhotoCarousel: React.FC = () => {
                 ) : currentImageUrl ? (
                     <img
                         src={currentImageUrl}
-                        alt={images[productIndex].title}
+                        alt={images[productIndex].title || 'Product photo'}
                         className="carousel-image"
                     />
                 ) : (
                     <img
                         src="/placeholder.jpg"
-                        alt="No image"
+                        alt="Placeholder"
                         className="carousel-image"
                     />
                 )}
