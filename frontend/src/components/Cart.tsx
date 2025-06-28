@@ -4,11 +4,11 @@ import CheckoutForm from './CheckoutForm';
 import { useAuth } from '../contexts/AuthContext';
 
 const Cart: React.FC = () => {
-    const { cart, removeFromCart} = useCart();
+    const { cart, removeFromCart } = useCart();
     const [showCheckout, setShowCheckout] = useState(false);
     const [purchased, setPurchased] = useState(false);
     const total = cart.reduce((sum, item) => sum + (item.price ?? 0) * item.quantity, 0);
-     const { user } = useAuth();
+    const { user } = useAuth();
 
     if (cart.length === 0) {
         return <div>Your cart is empty.</div>;
@@ -31,34 +31,34 @@ const Cart: React.FC = () => {
                         }}
                     >
                         <div style={{ display: 'flex', gap: 8 }}>
-                          {item.imageUrls && item.imageUrls.length > 0 ? (
-                            item.imageUrls.map((url: string, idx: number) => (
-                              <img
-                                key={idx}
-                                src={url}
-                                alt={`${item.title} image ${idx + 1}`}
-                                style={{
-                                  width: 80,
-                                  height: 80,
-                                  objectFit: 'cover',
-                                  borderRadius: 8,
-                                  background: '#f4f4f4'
-                                }}
-                              />
-                            ))
-                          ) : (
-                            <img
-                              src="/placeholder.jpg"
-                              alt="No product"
-                              style={{
-                                width: 80,
-                                height: 80,
-                                objectFit: 'cover',
-                                borderRadius: 8,
-                                background: '#f4f4f4'
-                              }}
-                            />
-                          )}
+                            {item.imageUrls && item.imageUrls.length > 0 ? (
+                                item.imageUrls.map((url: string, idx: number) => (
+                                    <img
+                                        key={idx}
+                                        src={url}
+                                        alt={`${item.title} ${idx + 1}`}
+                                        style={{
+                                            width: 80,
+                                            height: 80,
+                                            objectFit: 'cover',
+                                            borderRadius: 8,
+                                            background: '#f4f4f4'
+                                        }}
+                                    />
+                                ))
+                            ) : (
+                                <img
+                                    src="/placeholder.jpg"
+                                    alt="No product"
+                                    style={{
+                                        width: 80,
+                                        height: 80,
+                                        objectFit: 'cover',
+                                        borderRadius: 8,
+                                        background: '#f4f4f4'
+                                    }}
+                                />
+                            )}
                         </div>
                         <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 'bold' }}>{item.title}</div>
