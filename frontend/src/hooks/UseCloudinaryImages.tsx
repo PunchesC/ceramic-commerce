@@ -16,7 +16,9 @@ export function useCloudinaryImages(productId: number | null) {
       return;
     }
     setLoading(true);
-    fetch(`https://localhost:7034/api/products/${productId}/cloudinary-images`)
+    fetch(`https://localhost:7034/api/products/${productId}/cloudinary-images`, {
+      credentials: 'include',
+    })
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch Cloudinary images');
         return res.json();

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Order } from '../models/Order';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,23 +8,19 @@ const OrderHistory: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || !token) {
+    if (!user) {
       navigate('/login');
       return;
     }
-    // Log for debugging
-    console.log('Fetching orders for user:', user.email);
-    console.log('Using token:', token);
-    console.log('Token in localStorage:', localStorage.getItem('token'));
 
     fetch('https://localhost:7034/api/orders/user/me', {
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
     })
       .then(res => {
@@ -42,7 +39,7 @@ const OrderHistory: React.FC = () => {
         setLoading(false);
         console.error(err);
       });
-  }, [user, token, navigate]);
+  }, [user, navigate]);
 
   if (loading) return <div className="orders-card">Loading...</div>;
   if (error) return <div className="orders-card" style={{ color: 'red' }}>{error}</div>;

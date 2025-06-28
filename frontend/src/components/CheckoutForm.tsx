@@ -22,7 +22,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
   const elements = useElements();
   const navigate = useNavigate();
   const { cart, clearCart } = useCart();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -85,8 +85,8 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify({
           amount: Math.round(total * 100),
         }),
@@ -105,8 +105,8 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
         body: JSON.stringify({
           items: cart.map(item => ({
             productId: item.id,

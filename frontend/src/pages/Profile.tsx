@@ -4,20 +4,20 @@ import { UserProfile } from '../models/UserProfile';
 import { useNavigate } from 'react-router-dom';
 
 const Profile: React.FC = () => {
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token) {
+    if (!user) {
       navigate('/login');
       return;
     }
     fetch(`https://localhost:7034/api/users/me`, {
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     })
@@ -33,7 +33,7 @@ const Profile: React.FC = () => {
         setError(err.message);
         setLoading(false);
       });
-  }, [token, navigate]);
+  }, [user, navigate]);
 
   if (loading) return <div className="profile-card">Loading...</div>;
   if (error) return <div className="profile-card" style={{ color: 'red' }}>{error}</div>;

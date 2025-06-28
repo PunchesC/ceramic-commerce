@@ -7,7 +7,9 @@ export function useGalleryImages() {
   const [error, setError] = useState<string | null>(null);
 //used mainly for fetching title and id not for image url need to be updated to use cloudinary images
   useEffect(() => {
-    fetch('https://localhost:7034/api/products')
+    fetch('https://localhost:7034/api/products', {
+      credentials: 'include',
+    })
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch products');
         return res.json();
