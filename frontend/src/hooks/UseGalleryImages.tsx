@@ -23,7 +23,7 @@ export function useGalleryImages() {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
-
+  }, [API_URL]);
+  
   return { images, loading, error, API_URL };
 }
