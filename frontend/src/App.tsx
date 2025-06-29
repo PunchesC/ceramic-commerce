@@ -15,7 +15,7 @@ import './App.css';
 
 // Load Stripe publishable key from .env
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY!);
-
+console.log('Stripe Publishable Key:', process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 function App() {
   return (
     <Elements stripe={stripePromise}>
