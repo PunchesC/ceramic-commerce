@@ -9,13 +9,14 @@ const Profile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
-    fetch(`https://localhost:7034/api/users/me`, {
+    fetch(`${API_URL}/api/users/me`, {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json'

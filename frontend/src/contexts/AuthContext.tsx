@@ -15,9 +15,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const API_URL = process.env.REACT_APP_API_URL;
 
   const login = async (email: string, password: string) => {
-    const res = await fetch('https://localhost:7034/api/auth/login', {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include', // Send cookies
@@ -25,7 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     if (!res.ok) throw new Error('Login failed');
     // After login, fetch user info from a /me endpoint
-    const userRes = await fetch('https://localhost:7034/api/auth/me', {
+    const userRes = await fetch(`${API_URL}/api/auth/me`, {
       credentials: 'include',
     });
     if (!userRes.ok) throw new Error('Failed to fetch user info');
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = async (email: string, password: string, name?: string) => {
-    const res = await fetch('https://localhost:7034/api/auth/register', {
+    const res = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -42,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     if (!res.ok) throw new Error('Registration failed');
     // After register, fetch user info from a /me endpoint
-    const userRes = await fetch('https://localhost:7034/api/auth/me', {
+    const userRes = await fetch(`${API_URL}/api/auth/me`, {
       credentials: 'include',
     });
     if (!userRes.ok) throw new Error('Failed to fetch user info');
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const logout = async () => {
-    await fetch('https://localhost:7034/api/auth/logout', {
+    await fetch(`${API_URL}/api/auth/logout`, {
       method: 'POST',
       credentials: 'include',
     });

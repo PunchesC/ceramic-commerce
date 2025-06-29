@@ -36,6 +36,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
     postalCode: '',
     country: '',
   });
+  const API_URL = process.env.REACT_APP_API_URL;
 
   // Polling function to check order/payment status
   const checkOrderStatus = async (intentId: string, attempt = 0) => {
@@ -45,7 +46,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
       return;
     }
     try {
-      const response = await fetch(`https://localhost:7034/api/orders/status?paymentIntentId=${intentId}`);
+      const response = await fetch(`${API_URL}/api/orders/status?paymentIntentId=${intentId}`);
       if (response.status === 404) {
         setTimeout(() => checkOrderStatus(intentId, attempt + 1), 2000);
         return;
@@ -80,7 +81,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
     setProcessing(true);
     try {
       // 1. Create PaymentIntent first
-      const paymentRes = await fetch('https://localhost:7034/api/payments/create-intent', {
+      const paymentRes = await fetch(`${API_URL}/api/payments/create-intent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
       const { clientSecret, paymentIntentId } = await paymentRes.json();
 
       // 2. Create the order, passing paymentIntentId
-      const orderRes = await fetch('https://localhost:7034/api/orders', {
+      const orderRes = await fetch(`${API_URL}/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

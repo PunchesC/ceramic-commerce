@@ -6,6 +6,7 @@ export function useCloudinaryImages(productId: number | null) {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     if (!productId) return;
@@ -16,7 +17,7 @@ export function useCloudinaryImages(productId: number | null) {
       return;
     }
     setLoading(true);
-    fetch(`https://localhost:7034/api/products/${productId}/cloudinary-images`, {
+    fetch(`${API_URL}/api/products/${productId}/cloudinary-images`, {
       credentials: 'include',
     })
       .then(res => {

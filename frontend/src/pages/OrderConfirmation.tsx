@@ -6,11 +6,12 @@ const OrderConfirmation: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     //For testing purpose, change the URL to your API endpoint
     // fetch(`/api/orders/${orderId}`)
-    fetch(`https://localhost:7034/api/orders/${orderId}`, {
+    fetch(`${API_URL}/api/orders/${orderId}`, {
       credentials: 'include',
     })
       .then(res => res.json())

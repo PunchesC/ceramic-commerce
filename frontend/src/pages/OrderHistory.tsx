@@ -10,6 +10,7 @@ const OrderHistory: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     if (!user) {
@@ -17,7 +18,7 @@ const OrderHistory: React.FC = () => {
       return;
     }
 
-    fetch('https://localhost:7034/api/orders/user/me', {
+    fetch(`${API_URL}/api/orders/user/me`, {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
