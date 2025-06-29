@@ -8,6 +8,8 @@ export function useGalleryImages() {
   const API_URL = process.env.REACT_APP_API_URL;
 //used mainly for fetching title and id not for image url need to be updated to use cloudinary images
   useEffect(() => {
+    console.log(API_URL)
+    console.log(process.env.REACT_APP_API_URL)
     fetch(`${API_URL}/api/products`, {
       credentials: 'include',
     })
@@ -24,6 +26,6 @@ export function useGalleryImages() {
         setLoading(false);
       });
   }, [API_URL]);
-  
+
   return { images, loading, error, API_URL };
 }
