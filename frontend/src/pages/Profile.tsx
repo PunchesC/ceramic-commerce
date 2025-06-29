@@ -34,7 +34,7 @@ const Profile: React.FC = () => {
         setError(err.message);
         setLoading(false);
       });
-  }, [user, navigate]);
+  }, [user, navigate, API_URL]);
 
   if (loading) return <div className="profile-card">Loading...</div>;
   if (error) return <div className="profile-card" style={{ color: 'red' }}>{error}</div>;

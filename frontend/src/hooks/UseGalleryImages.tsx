@@ -25,5 +25,5 @@ export function useGalleryImages() {
       });
   }, []);
 
-  return { images, loading, error };
+  return { images, loading, error, API_URL };
 }

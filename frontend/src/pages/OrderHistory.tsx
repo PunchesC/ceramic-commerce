@@ -40,7 +40,7 @@ const OrderHistory: React.FC = () => {
         setLoading(false);
         console.error(err);
       });
-  }, [user, navigate]);
+  }, [user, navigate, API_URL]);
 
   if (loading) return <div className="orders-card">Loading...</div>;
   if (error) return <div className="orders-card" style={{ color: 'red' }}>{error}</div>;

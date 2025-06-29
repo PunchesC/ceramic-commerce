@@ -20,7 +20,7 @@ const OrderConfirmation: React.FC = () => {
         setLoading(false);
         console.log(data)
       });
-  }, [orderId]);
+  }, [orderId, API_URL]);
 
   if (loading) return <div>Loading...</div>;
   if (!order) return <div>Order not found.</div>;

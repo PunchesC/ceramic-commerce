@@ -33,7 +33,7 @@ export function useCloudinaryImages(productId: number | null) {
         setError(err.message);
         setLoading(false);
       });
-  }, [productId, getImages, setImages]);
+  }, [productId, getImages, setImages, API_URL]);
 
   return { imageUrls, loading, error };
 }
