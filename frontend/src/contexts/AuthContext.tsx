@@ -19,7 +19,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Fetch current user info
   const fetchMe = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/auth/me`, { credentials: "include" });
+      const res = await fetch(`${API_URL}/api/auth/me`, {
+        credentials: "include",
+      });
       if (res.ok) {
         const userData = await res.json();
         setUser(userData);
@@ -35,7 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const res = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      credentials: "include", 
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) throw new Error("Login failed");
