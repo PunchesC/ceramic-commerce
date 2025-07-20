@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 
 type User = { id: number; email: string; name?: string; isAdmin?: boolean };
 
@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const API_URL = process.env.REACT_APP_API_URL!;
 
   // Fetch current user info
-  const fetchMe = async () => {
+  const fetchMe = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/api/auth/me`, { credentials: "include" });
       if (res.ok) {
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       setUser(null);
     }
-  };
+  }, [API_URL]);
 
   const login = async (email: string, password: string) => {
     const res = await fetch(`${API_URL}/api/auth/login`, {
