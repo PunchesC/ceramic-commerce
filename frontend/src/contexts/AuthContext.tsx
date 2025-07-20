@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Try to restore session on mount
   useEffect(() => {
     fetchMe();
-  }, []);
+  }, [fetchMe]);
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, fetchMe }}>
