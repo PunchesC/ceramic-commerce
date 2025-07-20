@@ -1,37 +1,43 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type User = { id: number; email: string; name?: string; isAdmin?: boolean; };
+type User = { id: number; email: string; name?: string; isAdmin?: boolean };
 
 type AuthContextType = {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  fetchMe: () => Promise<void>;
 };
 
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const API_URL = process.env.REACT_APP_API_URL;
 
+  // Fetch current user info
+  const fetchMe = async () => {
+    const res = await fetch(`${API_URL}/api/auth/me`, {
+      credentials: 'include',
+    });
+    if (res.ok) {
+      const userData = await res.json();
+      setUser(userData);
+    } else {
+      setUser(null);
+    }
+  };
+
   const login = async (email: string, password: string) => {
     const res = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Send cookies
+      credentials: 'include',
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) throw new Error('Login failed');
-    // After login, fetch user info from a /me endpoint
-    const userRes = await fetch(`${API_URL}/api/auth/me`, {
-      credentials: 'include',
-    });
-    if (!userRes.ok) throw new Error('Failed to fetch user info');
-    const userData = await userRes.json();
-    setUser(userData);
+    await fetchMe();
   };
 
   const register = async (email: string, password: string, name?: string) => {
@@ -42,15 +48,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       body: JSON.stringify({ email, password, name }),
     });
     if (!res.ok) throw new Error('Registration failed');
-    // After register, fetch user info from a /me endpoint
-    const userRes = await fetch(`${API_URL}/api/auth/me`, {
-      credentials: 'include',
-    });
-    if (!userRes.ok) throw new Error('Failed to fetch user info');
-    const userData = await userRes.json();
-    setUser(userData);
+    await fetchMe();
   };
-
 
   const logout = async () => {
     await fetch(`${API_URL}/api/auth/logout`, {
@@ -61,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, fetchMe }}>
       {children}
     </AuthContext.Provider>
   );
