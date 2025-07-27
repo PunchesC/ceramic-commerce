@@ -14,16 +14,12 @@ export function useGalleryImages() {
         if (!res.ok) throw new Error('Failed to fetch products');
         const products = await res.json();
 
-        // For each product, fetch image file names and construct URLs
+        // For each product, fetch backend image URLs
         const productsWithImages = await Promise.all(
           products.map(async (product: GalleryImage) => {
             const imgRes = await fetch(`${API_URL}/api/product-images/${product.id}`);
-            let fileNames: string[] = [];
-            if (imgRes.ok) fileNames = await imgRes.json();
-            // Construct URLs for each file name
-            const imageUrls = fileNames.map(
-              fileName => `${API_URL}/api/product-images/${product.id}/${encodeURIComponent(fileName)}`
-            );
+            let imageUrls: string[] = [];
+            if (imgRes.ok) imageUrls = await imgRes.json();
             return { ...product, imageUrls };
           })
         );
