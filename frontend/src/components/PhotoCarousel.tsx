@@ -1,51 +1,55 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGalleryImages } from '../hooks/UseGalleryImages';
-import { useCloudinaryImages } from '../hooks/UseCloudinaryImages';
 
 const PhotoCarousel: React.FC = () => {
     const { images, loading: productsLoading } = useGalleryImages();
     const [productIndex, setProductIndex] = useState(0);
-    const [cloudinaryImageIndex, setCloudinaryImageIndex] = useState(0);
+    const [imageIndex, setImageIndex] = useState(0);
     const [playing, setPlaying] = useState(true);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const currentProduct = images[productIndex];
+const imageUrls = currentProduct?.imageUrls || [];
 
-    // Fetch Cloudinary images for the current product
-    const currentProductId = images.length > 0 ? images[productIndex].id : null;
-    const { imageUrls, loading: imagesLoading } = useCloudinaryImages(currentProductId);
-
-    // Reset image index when product or images change
+    // Reset image index when product changes
     useEffect(() => {
-        setCloudinaryImageIndex(0);
-    }, [currentProductId, imageUrls.length]);
+        setImageIndex(0);
+    }, [productIndex, images]);
 
     // Carousel auto-play logic
-    useEffect(() => {
-        if (playing && images.length > 0 && imageUrls.length > 0) {
-            intervalRef.current = setInterval(() => {
-                setCloudinaryImageIndex(idx => {
-                    if (idx < imageUrls.length - 1) {
-                        return idx + 1;
-                    } else {
-                        setProductIndex(i => (i === images.length - 1 ? 0 : i + 1));
-                        return 0;
-                    }
-                });
-            }, 2500);
-        } else if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-        }
-        return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-        };
-    }, [playing, images.length, imageUrls.length]);
+useEffect(() => {
+    if (
+        playing &&
+        images.length > 0 &&
+        imageUrls.length > 0
+    ) {
+        intervalRef.current = setInterval(() => {
+            setImageIndex(idx => {
+                if (idx < imageUrls.length - 1) {
+                    return idx + 1;
+                } else {
+                    setProductIndex(i => (i === images.length - 1 ? 0 : i + 1));
+                    return 0;
+                }
+            });
+        }, 2500);
+    } else if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+    }
+    return () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+}, [playing, images, productIndex, imageUrls.length]);
 
     if (productsLoading) return <div>Loading carousel...</div>;
     if (images.length === 0) return <div>No images available for carousel.</div>;
 
+    // const currentProduct = images[productIndex];
+    // const imageUrls = currentProduct.imageUrls || [];
+
     // Previous: go to previous image or previous product
     const prev = () => {
         if (imageUrls.length > 0) {
-            setCloudinaryImageIndex(idx => {
+            setImageIndex(idx => {
                 if (idx === 0) {
                     setProductIndex(i => (i === 0 ? images.length - 1 : i - 1));
                     return 0;
@@ -59,7 +63,7 @@ const PhotoCarousel: React.FC = () => {
     // Next: go to next image or next product
     const next = () => {
         if (imageUrls.length > 0) {
-            setCloudinaryImageIndex(idx => {
+            setImageIndex(idx => {
                 if (idx === imageUrls.length - 1) {
                     setProductIndex(i => (i === images.length - 1 ? 0 : i + 1));
                     return 0;
@@ -75,33 +79,21 @@ const PhotoCarousel: React.FC = () => {
         setPlaying(p => !p);
     };
 
-    // Use the current Cloudinary image, or a placeholder
+    // Use the current image, or a placeholder
     const currentImageUrl =
-        !imagesLoading && imageUrls.length > 0
-            ? imageUrls[cloudinaryImageIndex]
-            : null; // null means show spinner
+        imageUrls.length > 0
+            ? imageUrls[imageIndex]
+            : "/placeholder.jpg";
 
     return (
         <div className="carousel">
             <div>
                 <button onClick={prev}>&lt;</button>
-                {imagesLoading ? (
-                    <div style={{ width: 200, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span>Loading...</span>
-                    </div>
-                ) : currentImageUrl ? (
-                    <img
-                        src={currentImageUrl}
-                        alt={images[productIndex].title || 'Product photo'}
-                        className="carousel-image"
-                    />
-                ) : (
-                    <img
-                        src="/placeholder.jpg"
-                        alt="Placeholder"
-                        className="carousel-image"
-                    />
-                )}
+                <img
+                    src={currentImageUrl}
+                    alt={currentProduct.title || 'Product photo'}
+                    className="carousel-image"
+                />
                 <button onClick={next}>&gt;</button>
             </div>
             <div>
