@@ -12,8 +12,23 @@ export function useGalleryImages() {
       try {
         const res = await fetch(`${API_URL}/api/products`);
         if (!res.ok) throw new Error('Failed to fetch products');
-        const data = await res.json();
-        setImages(data);
+        const products = await res.json();
+
+        // For each product, fetch image file names and construct URLs
+        const productsWithImages = await Promise.all(
+          products.map(async (product: GalleryImage) => {
+            const imgRes = await fetch(`${API_URL}/api/product-images/${product.id}`);
+            let fileNames: string[] = [];
+            if (imgRes.ok) fileNames = await imgRes.json();
+            // Construct URLs for each file name
+            const imageUrls = fileNames.map(
+              fileName => `${API_URL}/api/product-images/${product.id}/${encodeURIComponent(fileName)}`
+            );
+            return { ...product, imageUrls };
+          })
+        );
+
+        setImages(productsWithImages);
         setLoading(false);
       } catch (err: any) {
         setError(err.message || String(err));

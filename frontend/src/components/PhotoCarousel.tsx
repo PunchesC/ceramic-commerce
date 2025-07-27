@@ -8,7 +8,7 @@ const PhotoCarousel: React.FC = () => {
     const [playing, setPlaying] = useState(true);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const currentProduct = images[productIndex];
-const imageUrls = currentProduct?.imageUrls || [];
+    const imageUrls = currentProduct?.imageUrls || [];
 
     // Reset image index when product changes
     useEffect(() => {
