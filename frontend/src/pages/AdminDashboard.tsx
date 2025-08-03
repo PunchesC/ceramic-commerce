@@ -19,7 +19,7 @@ const AdminDashboard: React.FC = () => {
   };
   return (
     <div style={{ padding: '2rem' }}>
-      <h1>Admin Dashboard</h1>
+      <h1>Admin Dashboard THIS IS FAKE</h1>
       <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
         <div><strong>Total Users:</strong> {stats.totalUsers}</div>
         <div><strong>Total Orders:</strong> {stats.totalOrders}</div>

@@ -15,6 +15,7 @@ import ProductDetails from './pages/ProductDetails';
 import Gallery from './pages/Gallery';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AdminProductManager from './pages/AdminProductManager';
 
 // Load Stripe publishable key from azure static app settings
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY!);
@@ -58,6 +59,11 @@ function App() {
           <Route path="/admin" element={
             <AdminRoute>
               <AdminDashboard />
+            </AdminRoute>
+          } />
+          <Route path="/admin/products" element={
+            <AdminRoute>
+              <AdminProductManager />
             </AdminRoute>
           } />
           {/* ...other admin routes... */}

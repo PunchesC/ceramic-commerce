@@ -51,6 +51,12 @@ const Profile: React.FC = () => {
         {/* <div><strong>Admin:</strong> {profile.isAdmin ? 'Yes' : 'No'}</div> */}
       </div>
       <button className="profile-edit-btn" disabled>Edit Profile</button>
+      {user?.isAdmin && (
+        <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+          <button onClick={() => navigate('/admin')}>Admin Dashboard</button>
+          <button onClick={() => navigate('/admin/products')}>Product Manager</button>
+        </div>
+      )}
     </div>
   );
 };
