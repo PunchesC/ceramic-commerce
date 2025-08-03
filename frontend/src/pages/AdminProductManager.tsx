@@ -5,6 +5,50 @@ import { Product } from '../models/Product';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
+// Utility to normalize image URLs
+function getImageUrl(url: string): string {
+  if (!url) return '';
+  // If already absolute (http/https), return as is
+  if (/^https?:\/\//i.test(url)) return url;
+  // If starts with /api, prepend API_URL if defined
+  if (url.startsWith('/api')) {
+    return API_URL ? `${API_URL}${url}` : url;
+  }
+  // Otherwise, return as is
+  return url;
+}
+
+// Fallback placeholder for broken images
+const placeholderImg =
+  'https://via.placeholder.com/60x60.png?text=No+Image';
+
+// Styles
+const imageListStyle = { display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' } as const;
+const imageStyle = { width: 60, height: 60, objectFit: 'cover', borderRadius: 4 } as const;
+const imagePlaceholderStyle = { ...imageStyle, opacity: 0.5 } as const;
+
+// Reusable image list component (memoized)
+const ProductImageList: React.FC<{ urls?: string[] }> = React.memo(({ urls }) => (
+  <div style={imageListStyle}>
+    {urls && urls.length > 0 ? (
+      urls.map((url, idx) => (
+        <img
+          key={idx}
+          src={getImageUrl(url)}
+          alt=""
+          style={imageStyle}
+          onError={e => {
+            (e.target as HTMLImageElement).src = placeholderImg;
+          }}
+        />
+      ))
+    ) : (
+      <img src={placeholderImg} alt="No images" style={imagePlaceholderStyle} />
+    )}
+  </div>
+));
+ProductImageList.displayName = 'ProductImageList';
+
 const emptyForm: Omit<Product, 'id' | 'imageUrls'> = {
   title: '',
   description: '',
@@ -17,6 +61,7 @@ const emptyForm: Omit<Product, 'id' | 'imageUrls'> = {
 const AdminProductManager: React.FC = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
@@ -26,9 +71,15 @@ const AdminProductManager: React.FC = () => {
   // Fetch products
   useEffect(() => {
     if (!user?.isAdmin) return;
+    setLoading(true);
     fetch(`${API_URL}/api/products`, { credentials: 'include' })
-      .then(res => res.json())
-      .then(setProducts);
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch products');
+        return res.json();
+      })
+      .then(setProducts)
+      .catch(() => setMessage('Error loading products'))
+      .finally(() => setLoading(false));
   }, [user]);
 
   // Handle form input
@@ -84,9 +135,15 @@ const AdminProductManager: React.FC = () => {
     setForm(emptyForm);
     setSelectedFiles(null);
     // Refresh products
+    setLoading(true);
     fetch(`${API_URL}/api/products`, { credentials: 'include' })
-      .then(res => res.json())
-      .then(setProducts);
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch products');
+        return res.json();
+      })
+      .then(setProducts)
+      .catch(() => setMessage('Error loading products'))
+      .finally(() => setLoading(false));
   };
 
   // Edit product
@@ -145,9 +202,15 @@ const AdminProductManager: React.FC = () => {
     }
     setMessage('Images uploaded!');
     setSelectedFiles(null);
+    setLoading(true);
     fetch(`${API_URL}/api/products`, { credentials: 'include' })
-      .then(res => res.json())
-      .then(setProducts);
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch products');
+        return res.json();
+      })
+      .then(setProducts)
+      .catch(() => setMessage('Error loading products'))
+      .finally(() => setLoading(false));
   };
 
   // Done editing/creating
@@ -212,31 +275,27 @@ const AdminProductManager: React.FC = () => {
         )}
         {/* Show images for product being edited */}
         {editingId && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-            {products.find(p => p.id === editingId)?.imageUrls?.map((url, idx) => (
-              <img key={idx} src={url} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }} />
-            ))}
-          </div>
+          <ProductImageList urls={products.find(p => p.id === editingId)?.imageUrls} />
         )}
         <button type="submit" disabled={uploading}>{editingId ? 'Update' : 'Create'} Product</button>
       </form>
       <h2>Products</h2>
-      <ul>
-        {products.map(product => (
-          <li key={product.id} style={{ marginBottom: 16, background: '#f4f4f4', padding: 12, borderRadius: 6 }}>
-            <strong>{product.title}</strong> (${product.price.toFixed(2)}) {product.isActive ? '' : '(Inactive)'}
-            <br />
-            <button onClick={() => handleEdit(product)} style={{ marginRight: 8 }}>Edit</button>
-            <button onClick={() => handleDelete(product.id)} style={{ marginRight: 8 }}>Delete</button>
-            {/* Show images for each product */}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-              {product.imageUrls && product.imageUrls.map((url, idx) => (
-                <img key={idx} src={url} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4 }} />
-              ))}
-            </div>
-          </li>
-        ))}
-      </ul>
+      {loading ? (
+        <div>Loading products...</div>
+      ) : (
+        <ul>
+          {products.map(product => (
+            <li key={product.id} style={{ marginBottom: 16, background: '#f4f4f4', padding: 12, borderRadius: 6 }}>
+              <strong>{product.title}</strong> (${product.price.toFixed(2)}) {product.isActive ? '' : '(Inactive)'}
+              <br />
+              <button onClick={() => handleEdit(product)} style={{ marginRight: 8 }}>Edit</button>
+              <button onClick={() => handleDelete(product.id)} style={{ marginRight: 8 }}>Delete</button>
+              {/* Show images for each product */}
+              <ProductImageList urls={product.imageUrls} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
