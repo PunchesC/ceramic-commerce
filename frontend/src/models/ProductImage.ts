@@ -1,6 +1,6 @@
 export interface ProductImage {
-  id: number;
+  id: string;
   url: string;
   cloudinaryPublicId: string;
-  productId: number;
+  productId: string;
 }

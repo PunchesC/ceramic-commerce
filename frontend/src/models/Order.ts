@@ -3,8 +3,8 @@ import { OrderItem } from "./OrderItem";
 export type OrderStatus = 'pending' | 'paid' | 'shipped' | 'cancelled' | 'refunded';
 
 export interface Order {
-  id: number;
-  userId?: number;
+  id: string;
+  userId?: string;
   items: OrderItem[];
   total: number;
   stripePaymentIntentId?: string;

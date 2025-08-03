@@ -2,7 +2,7 @@ import { ArtistPiece } from "./ArtistPiece";
 
 
 export interface GalleryImage extends ArtistPiece {
-  id: number;
+  id: string;
   title: string;
   description?: string;
   price: number;

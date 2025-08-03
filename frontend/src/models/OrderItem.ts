@@ -1,10 +1,10 @@
 export interface OrderItem  {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   quantity: number;
   price: number;
   product: {
-    id: number;
+    id: string;
     title: string;
     imageUrls?: string[];
   };
