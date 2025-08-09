@@ -15,7 +15,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const API_URL = process.env.REACT_APP_API_URL!;
 
   // Fetch current user info
   const fetchMe = useCallback(async () => {
