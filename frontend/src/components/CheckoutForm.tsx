@@ -3,6 +3,7 @@ import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { apiFetch } from '../utils/api';
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -81,7 +82,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
     setProcessing(true);
     try {
       // 1. Create PaymentIntent first
-      const paymentRes = await fetch(`${API_URL}/api/payments/create-intent`, {
+      const paymentRes = await apiFetch(`/api/payments/create-intent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,7 +102,7 @@ const CheckoutForm: React.FC<{ total: number; onSuccess: () => void }> = ({ tota
       const { clientSecret, paymentIntentId } = await paymentRes.json();
 
       // 2. Create the order, passing paymentIntentId
-      const orderRes = await fetch(`${API_URL}/api/orders`, {
+      const orderRes = await apiFetch(`/api/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Product } from '../models/Product';
+import { apiFetch } from '../utils/api';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -98,9 +98,9 @@ const AdminProductManager: React.FC = () => {
     setMessage(null);
     const method = editingId ? 'PUT' : 'POST';
     const url = editingId
-      ? `${API_URL}/api/products/${editingId}`
-      : `${API_URL}/api/products`;
-    const res = await fetch(url, {
+      ? `/api/products/${editingId}`
+      : `/api/products`;
+    const res = await apiFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -117,7 +117,7 @@ const AdminProductManager: React.FC = () => {
       setUploading(true);
       const formData = new FormData();
       Array.from(selectedFiles).forEach(file => formData.append('files', file));
-      const imgRes = await fetch(`${API_URL}/api/product-images/${savedProduct.id}`, {
+      const imgRes = await apiFetch(`/api/product-images/${savedProduct.id}`, {
         method: 'POST',
         credentials: 'include',
         body: formData,
@@ -164,7 +164,7 @@ const AdminProductManager: React.FC = () => {
   // Delete product
   const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this product?')) return;
-    await fetch(`${API_URL}/api/products/${id}`, {
+    await apiFetch(`/api/products/${id}`, {
       method: 'DELETE',
       credentials: 'include',
     });
@@ -189,7 +189,7 @@ const AdminProductManager: React.FC = () => {
     setMessage(null);
     const formData = new FormData();
     Array.from(selectedFiles).forEach(file => formData.append('files', file));
-    const res = await fetch(`${API_URL}/api/product-images/${productId}`, {
+    const res = await apiFetch(`/api/product-images/${productId}`, {
       method: 'POST',
       credentials: 'include',
       body: formData,

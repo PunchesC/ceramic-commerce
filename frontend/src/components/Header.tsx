@@ -6,6 +6,8 @@ import '../App.css';
 
 function Header() {
   const { cart } = useCart();
+  // Compute total items in cart
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,9 +43,11 @@ function Header() {
         <button onClick={() => { goToSection('#about'); setMenuOpen(false); }}>About</button>
         <button onClick={() => { goToSection('#connections'); setMenuOpen(false); }}>Connections</button>
         <button onClick={() => { navigate('/gallery'); setMenuOpen(false); }}>Gallery</button>
-        <button onClick={() => { navigate('/cart'); setMenuOpen(false); }}>
-          CART ({cart.reduce((sum, item) => sum + item.quantity, 0)})
-        </button>
+        {itemCount > 0 && (
+          <button onClick={() => { navigate('/cart'); setMenuOpen(false); }}>
+            CART ({itemCount})
+          </button>
+        )}
         {user ? (
           <>
             <button onClick={() => { navigate('/orders'); setMenuOpen(false); }}>Orders</button>

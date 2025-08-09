@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { apiFetch, initCsrf } from "../utils/api";
 
 type User = { id: number; email: string; name?: string; isAdmin?: boolean };
 
@@ -19,7 +20,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Fetch current user info
   const fetchMe = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/api/auth/me`, {
+      const res = await apiFetch(`/api/auth/me`, {
         credentials: "include",
       });
       if (res.ok) {
@@ -31,13 +32,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       setUser(null);
     }
-  }, [API_URL]);
+  }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
+    const res = await apiFetch(`/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include", 
+      credentials: "include",
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) throw new Error("Login failed");
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = async (email: string, password: string, name?: string) => {
-    const res = await fetch(`${API_URL}/api/auth/register`, {
+    const res = await apiFetch(`/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -56,16 +57,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    await fetch(`${API_URL}/api/auth/logout`, {
+    await apiFetch(`/api/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
     setUser(null);
   };
 
-  // Try to restore session on mount
+  // Initialize CSRF early and try to restore session on mount
   useEffect(() => {
-    fetchMe();
+    initCsrf().finally(fetchMe);
   }, [fetchMe]);
 
   return (
