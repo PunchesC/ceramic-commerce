@@ -1,6 +1,6 @@
 export interface ProductImage {
   id: string;
   url: string;
-  cloudinaryPublicId: string;
   productId: string;
+  // cloudinaryPublicId?: string; // legacy, no longer used
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { GalleryImage } from '../models/GalleryImage';
+import type { ImageVariant } from '../models/ImageVariant';
 
 export function useGalleryImages() {
   const [images, setImages] = useState<GalleryImage[]>([]);
@@ -10,17 +11,36 @@ export function useGalleryImages() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/products`);
+        // Fetch product list first
+        const res = await fetch(`${API_URL}/api/products`, { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch products');
         const products = await res.json();
 
-        // For each product, fetch backend image URLs
+        // If each product already includes imageUrls (thumbnails), use them directly
+        if (products.length && Array.isArray(products[0]?.imageUrls)) {
+          setImages(products);
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise, fetch image variants per product and prefer all w800 URLs, else originals
         const productsWithImages = await Promise.all(
           products.map(async (product: GalleryImage) => {
-            const imgRes = await fetch(`${API_URL}/api/product-images/${product.id}`);
-            let imageUrls: string[] = [];
-            if (imgRes.ok) imageUrls = await imgRes.json();
-            return { ...product, imageUrls };
+            try {
+              const imgRes = await fetch(`${API_URL}/api/product-images/${product.id}`, { credentials: 'include' });
+              if (!imgRes.ok) return { ...product, imageUrls: [] };
+              const variants: ImageVariant[] = await imgRes.json();
+              variants.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+              const w800s = variants.filter(v => v.variant?.toLowerCase() === 'w800');
+              const originals = variants.filter(v => v.variant?.toLowerCase() === 'original');
+              const chosen = w800s.length ? w800s : originals;
+              const urls = chosen.map(v => v.url);
+
+              return { ...product, imageUrls: urls };
+            } catch {
+              return { ...product, imageUrls: [] };
+            }
           })
         );
 
@@ -31,6 +51,7 @@ export function useGalleryImages() {
         setLoading(false);
       }
     };
+
     fetchProducts();
   }, [API_URL]);
 

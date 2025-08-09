@@ -5,6 +5,10 @@ import { apiFetch } from '../utils/api';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
+// Add: allowed types and max size (keep in sync with backend)
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
+
 // Utility to normalize image URLs
 function getImageUrl(url: string): string {
   if (!url) return '';
@@ -92,6 +96,54 @@ const AdminProductManager: React.FC = () => {
     }));
   };
 
+  // Replace: robust file input handler with type/size validation and feedback
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) {
+      setSelectedFiles(null);
+      return;
+    }
+
+    const valid: File[] = [];
+    const rejected: string[] = [];
+
+    Array.from(files).forEach(f => {
+      const mime = f.type;
+      const ext = f.name.split('.').pop()?.toLowerCase();
+      const okByMime = ALLOWED_TYPES.has(mime);
+      const okByExt = ext ? ['jpg', 'jpeg', 'png', 'webp'].includes(ext) : false;
+      const okType = okByMime || okByExt; // allow by extension if browser leaves type empty
+      const okSize = f.size <= MAX_UPLOAD_BYTES;
+
+      if (okType && okSize) {
+        valid.push(f);
+      } else {
+        const reasons = [
+          !okType ? `type ${mime || `.${ext || 'unknown'}`}` : '',
+          !okSize ? `size ${(f.size / (1024 * 1024)).toFixed(2)}MB` : '',
+        ].filter(Boolean).join(', ');
+        rejected.push(`${f.name} (${reasons})`);
+      }
+    });
+
+    if (rejected.length > 0) {
+      setMessage(`Some files were skipped: ${rejected.join('; ')}. Allowed: JPEG, PNG, WEBP up to 5MB.`);
+    } else {
+      setMessage(null);
+    }
+
+    if (valid.length > 0) {
+      const dt = new DataTransfer();
+      valid.forEach(f => dt.items.add(f));
+      setSelectedFiles(dt.files);
+    } else {
+      setSelectedFiles(null);
+    }
+
+    // Clear input so selecting the same files again triggers change
+    e.currentTarget.value = '';
+  };
+
   // Create or update product, and upload images if creating
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -116,7 +168,7 @@ const AdminProductManager: React.FC = () => {
     if (!editingId && savedProduct.id && selectedFiles && selectedFiles.length > 0) {
       setUploading(true);
       const formData = new FormData();
-      Array.from(selectedFiles).forEach(file => formData.append('files', file));
+      Array.from(selectedFiles).forEach(file => formData.append('Files', file));
       const imgRes = await apiFetch(`/api/product-images/${savedProduct.id}`, {
         method: 'POST',
         credentials: 'include',
@@ -177,18 +229,13 @@ const AdminProductManager: React.FC = () => {
     }
   };
 
-  // Handle file input
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSelectedFiles(e.target.files);
-  };
-
   // Upload images
   const handleUpload = async (productId: string) => {
     if (!selectedFiles || selectedFiles.length === 0) return;
     setUploading(true);
     setMessage(null);
     const formData = new FormData();
-    Array.from(selectedFiles).forEach(file => formData.append('files', file));
+    Array.from(selectedFiles).forEach(file => formData.append('Files', file));
     const res = await apiFetch(`/api/product-images/${productId}`, {
       method: 'POST',
       credentials: 'include',
@@ -202,6 +249,32 @@ const AdminProductManager: React.FC = () => {
     }
     setMessage('Images uploaded!');
     setSelectedFiles(null);
+
+    // Try to fetch latest image variants and update the product locally
+    try {
+      const listRes = await fetch(`${API_URL}/api/product-images/${productId}`, { credentials: 'include' });
+      if (listRes.ok) {
+        const data = await listRes.json();
+        let urls: string[] = [];
+        if (Array.isArray(data) && data.length && typeof data[0] === 'object') {
+          const variants = data as Array<{ url: string; variant?: string; sortOrder?: number }>;
+          variants.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+          const w800s = variants.filter(v => (v.variant || '').toLowerCase() === 'w800');
+          const originals = variants.filter(v => (v.variant || '').toLowerCase() === 'original');
+          const chosen = w800s.length ? w800s : originals.length ? originals : variants;
+          urls = chosen.map(v => v.url);
+        } else if (Array.isArray(data) && (data.length === 0 || typeof data[0] === 'string')) {
+          urls = data as string[];
+        }
+        if (urls.length) {
+          setProducts(prev => prev.map(p => (p.id === productId ? { ...p, imageUrls: urls } : p)));
+        }
+      }
+    } catch {
+      // ignore preview update errors
+    }
+
+    // Also refresh the full list from backend
     setLoading(true);
     fetch(`${API_URL}/api/products`, { credentials: 'include' })
       .then(res => {
@@ -255,7 +328,34 @@ const AdminProductManager: React.FC = () => {
         {/* Image upload for product being created/edited */}
         <label style={{ display: 'flex', flexDirection: 'column', fontWeight: 500 }}>
           Product Images
-          <input type="file" multiple onChange={handleFileChange} />
+          <input
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            onChange={handleFileChange}
+          />
+          {/* Preview of selected files before upload */}
+          {selectedFiles && selectedFiles.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>{selectedFiles.length} file(s) selected</div>
+              <div style={imageListStyle}>
+                {Array.from(selectedFiles).map((f, idx) => (
+                  <img
+                    key={idx}
+                    src={URL.createObjectURL(f)}
+                    alt={f.name}
+                    style={imageStyle}
+                    onLoad={e => URL.revokeObjectURL((e.target as HTMLImageElement).src)}
+                  />
+                ))}
+              </div>
+              {!editingId && (
+                <div style={{ fontSize: 12, color: '#555', marginTop: 4 }}>
+                  Images will upload after you create the product.
+                </div>
+              )}
+            </div>
+          )}
         </label>
         {/* Only show Upload Images button for editing existing products */}
         {editingId && selectedFiles && selectedFiles.length > 0 && (

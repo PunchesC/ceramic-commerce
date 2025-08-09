@@ -41,6 +41,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) throw new Error("Login failed");
+    // Refresh CSRF after auth, tokens are often tied to session/identity
+    await initCsrf();
     await fetchMe();
   };
 
@@ -52,6 +54,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       body: JSON.stringify({ email, password, name }),
     });
     if (!res.ok) throw new Error("Registration failed");
+    // Refresh CSRF after auth
+    await initCsrf();
     await fetchMe();
   };
 
