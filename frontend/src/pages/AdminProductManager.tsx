@@ -149,23 +149,26 @@ const AdminProductManager: React.FC = () => {
     e.preventDefault();
     setMessage(null);
     const method = editingId ? 'PUT' : 'POST';
-    const url = editingId
-      ? `/api/products/${editingId}`
-      : `/api/products`;
+    const url = editingId ? `/api/products/${editingId}` : `/api/products`;
+
     const res = await apiFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(form),
     });
+
     if (!res.ok) {
-      setMessage('Error saving product');
+      const txt = await res.text().catch(() => '');
+      setMessage(`Error saving product${txt ? `: ${txt}` : ''}`);
       return;
     }
-    const savedProduct = await res.json();
+
+    // Only parse JSON when creating; Update returns 204 NoContent
+    const savedProduct = method === 'POST' ? await res.json() : null;
+
     let imageUploadMessage = '';
-    // If creating and files are selected, upload images right after product creation
-    if (!editingId && savedProduct.id && selectedFiles && selectedFiles.length > 0) {
+    if (!editingId && savedProduct?.id && selectedFiles && selectedFiles.length > 0) {
       setUploading(true);
       const formData = new FormData();
       Array.from(selectedFiles).forEach(file => formData.append('Files', file));
@@ -176,22 +179,24 @@ const AdminProductManager: React.FC = () => {
       });
       setUploading(false);
       if (!imgRes.ok) {
-        const errorText = await imgRes.text();
-        imageUploadMessage = ' (Image upload failed: ' + errorText + ')';
+        const errorText = await imgRes.text().catch(() => '');
+        imageUploadMessage = ' (Image upload failed' + (errorText ? `: ${errorText}` : '') + ')';
       } else {
         imageUploadMessage = ' Images uploaded!';
       }
     }
+
     setMessage('Product saved!' + imageUploadMessage);
     setEditingId(null);
     setForm(emptyForm);
     setSelectedFiles(null);
+
     // Refresh products
     setLoading(true);
     fetch(`${API_URL}/api/products`, { credentials: 'include' })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch products');
-        return res.json();
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to fetch products');
+        return r.json();
       })
       .then(setProducts)
       .catch(() => setMessage('Error loading products'))

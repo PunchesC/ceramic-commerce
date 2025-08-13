@@ -9,7 +9,7 @@ import React, {
 
 import {
   apiFetch,
-  ensureCsrf,        // fetches CSRF token if not cached
+  initCsrf,        // fetches CSRF token if not cached
   forceRefreshCsrf,   // forces a new token fetch (after login/register)
   clearCsrf           // clears cached token (after logout)
 } from '../utils/api';
@@ -41,15 +41,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authLoading, setAuthLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Fetch currently authenticated user.
-   * GET /api/auth/me should be marked [AllowAnonymous] and return 401/403 or 200.
-   */
+  // Fetch currently authenticated user.
+  // GET /api/auth/me should allow anonymous and return 200 with user or 401/403.
   const fetchMe = useCallback(async () => {
     try {
-      const res = await apiFetch('/api/auth/me', {
-        credentials: 'include'
-      });
+      const res = await apiFetch('/api/auth/me', { credentials: 'include' });
       if (res.ok) {
         const data: User = await res.json();
         setUser(data);
@@ -61,35 +57,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  /**
-   * Login flow:
-   * 1. Ensure we have a CSRF token (login is POST and validated).
-   * 2. POST credentials.
-   * 3. On success force refresh CSRF token (session identity changed).
-   * 4. Fetch user profile.
-   */
+  // Login
   const login = useCallback(async (email: string, password: string) => {
     setAuthLoading(true);
     setError(null);
     try {
-      await ensureCsrf(); // only fetches if missing
+      await initCsrf(); // ensure header for POST
       const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
       if (!res.ok) {
-        if (res.status === 400 || res.status === 401) {
-          const txt = await res.text().catch(() => 'Login failed');
-          throw new Error(txt || 'Login failed');
-        }
-        throw new Error(`Login failed (${res.status})`);
+        const txt = await res.text().catch(() => 'Login failed');
+        throw new Error(txt || `Login failed (${res.status})`);
       }
-      // Pair CSRF token with new auth cookie
-      await forceRefreshCsrf();
+      await forceRefreshCsrf(); // rotate CSRF after identity change
       await fetchMe();
     } catch (e: any) {
       setUser(null);
@@ -100,14 +84,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [fetchMe]);
 
-  /**
-   * Registration flow mirrors login.
-   */
+  // Register
   const register = useCallback(async (email: string, password: string, name?: string) => {
     setAuthLoading(true);
     setError(null);
     try {
-      await ensureCsrf();
+      await initCsrf();
       const res = await apiFetch('/api/auth/register', {
         method: 'POST',
         credentials: 'include',
@@ -116,7 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       if (!res.ok) {
         const txt = await res.text().catch(() => 'Registration failed');
-        throw new Error(txt || 'Registration failed');
+        throw new Error(txt || `Registration failed (${res.status})`);
       }
       await forceRefreshCsrf();
       await fetchMe();
@@ -129,12 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [fetchMe]);
 
-  /**
-   * Logout flow:
-   * 1. POST logout (endpoint exempt from CSRF in backend).
-   * 2. Clear user + cached CSRF token (cookie likely rotated or invalidated).
-   * 3. (Optional) You can pre-fetch a fresh CSRF token for next login attempt.
-   */
+  // Logout
   const logout = useCallback(async () => {
     setAuthLoading(true);
     setError(null);
@@ -144,27 +121,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         credentials: 'include'
       });
       if (!res.ok) {
-        // Even if logout fails, clear local state to avoid a stuck UI.
         console.warn('Logout request failed with status', res.status);
       }
     } catch (e) {
       console.warn('Logout network error', e);
     } finally {
       setUser(null);
-      clearCsrf();
+      clearCsrf(); // clear cached token; next POST will refetch
       setAuthLoading(false);
     }
   }, []);
 
-  /**
-   * Initial bootstrap:
-   * Option A (current): eagerly ensure CSRF so first POST is ready.
-   * Option B: remove ensureCsrf() call to defer until first mutating request.
-   */
+  // Initial bootstrap: ensure CSRF (optional) and restore session
   useEffect(() => {
     (async () => {
       try {
-        await ensureCsrf();
+        await initCsrf();
         await fetchMe();
       } finally {
         setLoading(false);
@@ -192,9 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export function useAuth(): AuthContextType {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
 }
