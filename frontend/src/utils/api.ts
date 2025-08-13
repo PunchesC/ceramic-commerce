@@ -1,10 +1,9 @@
-// Centralized API helper with CSRF support and credentials
-// Keeps the CSRF token in memory and attaches it to unsafe requests.
+// Unified API helper with streamlined CSRF handling.
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = (process.env.REACT_APP_API_URL || '').replace(/\/+$/, '');
 
 let csrfToken: string | null = null;
-let csrfPromise: Promise<string | null> | null = null;
+let inflightCsrf: Promise<string | null> | null = null;
 
 function isAbsolute(url: string) {
   return /^https?:\/\//i.test(url);
@@ -12,12 +11,13 @@ function isAbsolute(url: string) {
 
 function needsCsrf(method: string) {
   const m = method.toUpperCase();
-  return m === 'POST' || m === 'PUT' || m === 'PATCH' || m === 'DELETE';
+  // Mutating verbs
+  return m !== 'GET' && m !== 'HEAD' && m !== 'OPTIONS';
 }
 
 async function fetchCsrfToken(): Promise<string | null> {
   if (!API_URL) {
-    console.warn('REACT_APP_API_URL is not set; CSRF token cannot be fetched.');
+    console.warn('[api] REACT_APP_API_URL not set; cannot fetch CSRF token.');
     csrfToken = null;
     return null;
   }
@@ -26,78 +26,123 @@ async function fetchCsrfToken(): Promise<string | null> {
       method: 'GET',
       credentials: 'include',
     });
-    // Try header first
-    const headerToken = res.headers.get('X-CSRF-TOKEN') || res.headers.get('x-csrf-token');
-    if (headerToken) {
-      csrfToken = headerToken;
-      return csrfToken;
-    }
-    // Fallback to JSON body with several common keys
-    try {
-      const data = await res.json().catch(() => ({}));
-      csrfToken = (data?.token || data?.requestToken || data?.csrfToken || null) as string | null;
-      return csrfToken;
-    } catch {
+    if (!res.ok) {
+      console.warn('[api] CSRF token endpoint returned', res.status);
       csrfToken = null;
       return null;
     }
-  } catch (e) {
-    console.warn('Failed to fetch CSRF token:', e);
+    // Expect a canonical shape { token: "..." }
+    const data = await res.json().catch(() => ({}));
+    const token = data?.token ?? data?.requestToken ?? null;
+    if (typeof token === 'string' && token.length > 0) {
+      csrfToken = token;
+    } else {
+      console.warn('[api] CSRF token missing in response payload.');
+      csrfToken = null;
+    }
+    return csrfToken;
+  } catch (err) {
+    console.warn('[api] Failed to fetch CSRF token', err);
     csrfToken = null;
     return null;
   }
 }
 
-export async function initCsrf() {
-  if (!csrfToken && !csrfPromise) {
-    csrfPromise = fetchCsrfToken().finally(() => {
-      csrfPromise = null;
+export async function ensureCsrf() {
+  if (csrfToken) return csrfToken;
+  if (!inflightCsrf) {
+    inflightCsrf = fetchCsrfToken().finally(() => {
+      inflightCsrf = null;
     });
   }
-  return csrfPromise ?? Promise.resolve(csrfToken);
+  return inflightCsrf;
+}
+
+export function clearCsrf() {
+  csrfToken = null;
+}
+
+export async function forceRefreshCsrf() {
+  clearCsrf();
+  return ensureCsrf();
+}
+
+function attachCsrf(headers: Headers) {
+  if (csrfToken) {
+    headers.set('X-CSRF-TOKEN', csrfToken);
+  }
+}
+
+function prepareBodyAndHeaders(init: RequestInit, headers: Headers) {
+  const body = init.body;
+  if (!body) return;
+
+  // If FormData: let browser set boundary & omit JSON headers
+  if (body instanceof FormData) {
+    headers.delete('Content-Type');
+    return;
+  }
+
+  // If plain object (not already a string), serialize
+  if (typeof body === 'object' && !(body instanceof Blob) && !(body instanceof ArrayBuffer)) {
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+  }
+  // If you pass a string body manually, ensure caller set Content-Type.
 }
 
 export async function apiFetch(input: string, options: RequestInit = {}) {
-  const method = (options.method || 'GET').toUpperCase();
+  if (!API_URL && !isAbsolute(input)) {
+    throw new Error('REACT_APP_API_URL is not set');
+  }
 
-  // Resolve URL
+  const method = (options.method || 'GET').toUpperCase();
   let url = input;
-  if (!isAbsolute(input)) {
-    if (!API_URL) throw new Error('REACT_APP_API_URL is not set');
+  if (!isAbsolute(url)) {
     url = input.startsWith('/') ? `${API_URL}${input}` : `${API_URL}/${input}`;
   }
 
-  // Ensure credentials are included
-  const reqInit: RequestInit = {
+  const init: RequestInit = {
     credentials: 'include',
     ...options,
+    method
   };
 
-  // Add CSRF token for unsafe methods
+  const headers = new Headers(init.headers || {});
+  prepareBodyAndHeaders(init, headers);
+
   if (needsCsrf(method)) {
+    // Ensure token first
     if (!csrfToken) {
-      await initCsrf();
+      await ensureCsrf();
     }
-    const headers = new Headers(reqInit.headers || {});
-    if (csrfToken) headers.set('X-CSRF-TOKEN', csrfToken);
-
-    // Avoid overriding Content-Type when body is FormData
-    if (reqInit.body instanceof FormData) {
-      // leave Content-Type unset so browser sets proper boundary
-    }
-
-    reqInit.headers = headers;
+    attachCsrf(headers);
+    headers.set('X-Requested-With', 'XMLHttpRequest'); // optional convention
   }
 
-  let res = await fetch(url, reqInit);
+  init.headers = headers;
 
-  // If CSRF failed or expired, try to refresh once and retry for unsafe methods
+  let res = await fetch(url, init);
+
+  // Retry once if clearly anti-forgery failure
   if (needsCsrf(method) && (res.status === 400 || res.status === 403)) {
-    await initCsrf();
-    const retryHeaders = new Headers(reqInit.headers || {});
-    if (csrfToken) retryHeaders.set('X-CSRF-TOKEN', csrfToken);
-    res = await fetch(url, { ...reqInit, headers: retryHeaders });
+    const text = await res.clone().text().catch(() => '');
+    if (/csrf|antiforgery/i.test(text)) {
+      await forceRefreshCsrf();
+      if (csrfToken) {
+        const retryHeaders = new Headers(init.headers);
+        attachCsrf(retryHeaders);
+        init.headers = retryHeaders;
+        res = await fetch(url, init);
+      }
+    }
   }
 
   return res;
+}
+
+// Expose for debugging
+export function getCsrfTokenCached() {
+  return csrfToken;
 }
